@@ -1,0 +1,92 @@
+#!/bin/bash
+
+##___________________________________________________________________________
+## Global variables for repositories and directories
+
+#
+# /home/larsb
+#       `-- public_html
+#           `-- tropomi            ...  basedir
+#               |-- swir_source    ...  SWIR_SOURCE
+#               |   |-- build
+#               |   `-- release
+#               `-- swir           ...  TARGET
+#
+
+basedir=/home/larsb/public_html/tropomi
+## URL of the Git repository with the SWIR source code
+SWIR_REPO=git@github.com:lbaehren/swir.git
+SWIR_SOURCE=${basedir}/swir_source
+SWIR_BUILD=${SWIR_SOURCE}/build
+# Directory within which the generated Doxygen documentation can be found
+SOURCE=${SWIR_SOURCE}/release/share/doc/swir/html
+# Directory from which the generated Doxygen documenation will be served
+TARGET=${basedir}/swir
+
+## ==========================================================================
+##
+##  Processing
+##
+## ==========================================================================
+
+echo "[`date`] update_documentation - START"
+
+##___________________________________________________________________________
+## Backup of current documentation pages
+
+cd $basedir
+
+echo "-- Backup of current documentation pages ..."
+
+tar -czf swir.tgz swir
+
+##___________________________________________________________________________
+## Clone working copy from repository
+
+cd $basedir
+
+git clone ${SWIR_REPO} ${SWIR_SOURCE}
+
+if [[ -z $1 ]] ;
+then
+        echo "-- Building dcumentation from branch 'master' ..."
+else
+	cd ${SWIR_SOURCE}
+	git checkout $1
+        echo "-- Building dcumentation from branch '$1' ..."
+fi
+
+##___________________________________________________________________________
+## Rebuild the documentation
+
+echo "-- Rebuilding documentation ..."
+mkdir ${SWIR_BUILD}
+cd ${SWIR_BUILD}
+cmake -DWITH_DOCUMENTATION=YES -DCMAKE_SEARCH_PREFIX=/opt/local/EOS/nadc_extern/x86_64 $SWIR_SOURCE
+make -j install
+
+##___________________________________________________________________________
+## Update the online version of the documentation
+
+echo "-- Updating online version of documentation ..."
+rm -rf $TARGET
+cp -r $SOURCE $TARGET
+
+if [ -d $TARGET ] ; then
+    echo "Successfully updated online version."
+else
+    echo "Update of online documentation failed - reinstating previous version."
+    cd $basedir
+    tar -xzf swir.tgz
+fi
+
+##___________________________________________________________________________
+## Clean up
+
+echo "-- Post-installation clean-up ..."
+rm -rf ${SWIR_SOURCE}
+rm -f $basedir/swir.tgz
+
+## Report end of script execution
+
+echo "[`date`] update_documentation - DONE"

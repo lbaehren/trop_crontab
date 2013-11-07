@@ -1,0 +1,64 @@
+#!/bin/bash
+
+prefix=/home/larsb/sw
+basedir=$prefix/src
+
+## =============================================================================
+##
+##  Build the individual packages
+##
+## =============================================================================
+
+cd $basedir
+
+## === CMake ===
+
+echo ""
+echo "-- Updating installation of CMake ..."
+echo ""
+
+cd $basedir/CMake
+echo "--> Pulling in updates ..."
+git pull
+cd build
+echo "--> Cleaning up previous build ..."
+rm -rf *
+echo "--> Configuring code base ..."
+cmake -DCMAKE_INSTALL_PREFIX=$prefix ..
+make -j2 install
+echo "--> Cleaning up build directory ..."
+make clean
+
+## === Doxygen ===
+
+echo ""
+echo "-- Updating installation of Doxygen ..."
+echo ""
+
+cd $basedir/Doxygen
+git pull
+./configure prefix $prefix
+make
+make install
+echo "--> Cleaning up build directory ..."
+make clean
+
+## === LLVM/Clang ===
+
+echo ""
+echo "-- Updating installation of LLVM ..."
+echo ""
+
+cd $basedir/llvm
+git pull
+cd $basedir/llvm/tools/clang
+git pull
+cd $basedir/llvm/build
+echo "--> Cleaning up previous build ..."
+rm -rf *
+echo "--> Configuring code base ..."
+cmake -DCMAKE_INSTALL_PREFIX=$prefix ..
+make -j2 install
+echo "--> Cleaning up build directory ..."
+make clean
+ 

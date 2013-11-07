@@ -1,0 +1,45 @@
+#!/bin/bash
+
+basedir=/home/larsb/CodeDevelopment/Work/TROPOMI
+
+##______________________________________________________________________________
+## Update OCAL framework developed by KNMI
+##  - Get latest changes from the KNMI Subversion server
+##  - Push changes to repository on Github
+##  - Fetch changes from personal fork on Github
+
+cd $basedir
+
+if [[ -d "ocalfw" ]] ; then
+
+    echo "-- Directory ocalfw found - updating contents ..."
+
+    cd $basedir/ocalfw
+    echo "--> Get recent changes from SVN and update mirror on Github ..."
+    git svn rebase
+    git push tropomi master
+    echo "--> Fetch updates from fork and update local mirror ..."
+    git fetch origin
+    git push local --all
+
+else
+
+    echo "-- Directory ocalfw not found - starting checkout ..."
+
+    echo "--> Clone subversion repository into Git ..."
+#    git svn clone -s http://svn.knmi.nl/svn/tropocal/ocalfw ocalfw   # within KNMI
+    git svn clone -s https://svn.knmi.nl/svn/tropocal/ocalfw ocalfw   # outside KNMI
+
+    cd $basedir/ocalfw
+
+    ## Add remote: TROPOMI mirror of code base
+    git remote add tropomi git@github.com:Tropomi/ocalfw.git
+    git fetch tropomi
+
+    ## Add remote: Github mirror
+    git remote add origin git@github.com:lbaehren/ocalfw.git
+    git fetch origin
+
+fi
+
+
