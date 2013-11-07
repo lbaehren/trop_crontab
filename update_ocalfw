@@ -3,7 +3,7 @@
 basedir=/home/larsb/CodeDevelopment/Work/TROPOMI
 
 ##______________________________________________________________________________
-## Update OCAL framework developed by KNMI
+## Update working copy of OCAL framework developed by KNMI
 ##  - Get latest changes from the KNMI Subversion server
 ##  - Push changes to repository on Github
 ##  - Fetch changes from personal fork on Github
@@ -41,5 +41,3 @@ else
     git fetch origin
 
 fi
-
-
