@@ -9,9 +9,13 @@ basedir=$prefix/src
 ##
 ## =============================================================================
 
+## Report start time of script
+echo "\n[`date`] update_sw - START\n"
+
 cd $basedir
 
-## === CMake ===
+##______________________________________________________________________________
+##                                                                         CMake
 
 echo ""
 echo "-- Updating installation of CMake ..."
@@ -29,7 +33,8 @@ make -j2 install
 echo "--> Cleaning up build directory ..."
 make clean
 
-## === Doxygen ===
+##______________________________________________________________________________
+##                                                                       Doxygen
 
 echo ""
 echo "-- Updating installation of Doxygen ..."
@@ -43,7 +48,8 @@ make install
 echo "--> Cleaning up build directory ..."
 make clean
 
-## === LLVM/Clang ===
+##______________________________________________________________________________
+##                                                                    LLVM/Clang
 
 echo ""
 echo "-- Updating installation of LLVM ..."
@@ -61,4 +67,7 @@ cmake -DCMAKE_INSTALL_PREFIX=$prefix ..
 make -j2 install
 echo "--> Cleaning up build directory ..."
 make clean
- 
+
+## Report finishing time of script
+
+echo "\n[`date`] update_sw - DONE\n"
