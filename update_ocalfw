@@ -8,21 +8,28 @@ basedir=/home/larsb/CodeDevelopment/Work/TROPOMI
 ##  - Push changes to repository on Github
 ##  - Fetch changes from personal fork on Github
 
-echo "\n[`date`] update_ocalfw - START\n"
-
-cd $basedir
-
-if [[ -d "ocalfw" ]] ; then
-
-    echo "-- Directory ocalfw found - updating contents ..."
-
+fetch_updates ()
+{
     cd $basedir/ocalfw
     echo "--> Get recent changes from SVN and update mirror on Github ..."
     git svn rebase
     git push tropomi master
     echo "--> Fetch updates from fork and update local mirror ..."
     git fetch origin
-    git push local --all
+    git fetch tropomi
+#    git push local --all
+}
+
+echo ""
+echo "[`date`] update_ocalfw - START"
+echo ""
+
+cd $basedir
+
+if [[ -d "ocalfw" ]] ; then
+
+    echo "-- Directory ocalfw found - updating contents ..."
+    fetch_updates
 
 else
 
@@ -46,4 +53,6 @@ fi
 
 ## Report end of script executation
 
-echo "\n[`date`] update_ocalfw - DONE\n"
+echo ""
+echo "[`date`] update_ocalfw - DONE"
+echo ""
