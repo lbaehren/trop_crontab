@@ -32,7 +32,9 @@ TARGET=${basedir}/swir
 ##
 ## ==========================================================================
 
+echo ""
 echo "[`date`] update_documentation - START"
+echo ""
 
 ##___________________________________________________________________________
 ## Backup of current documentation pages
@@ -92,4 +94,6 @@ rm -f $basedir/swir.tgz
 
 ## Report end of script execution
 
+echo ""
 echo "[`date`] update_documentation - DONE"
+echo ""
