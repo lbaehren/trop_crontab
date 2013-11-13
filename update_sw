@@ -10,9 +10,45 @@ basedir=$prefix/src
 ## =============================================================================
 
 ## Report start time of script
-echo "\n[`date`] update_sw - START\n"
+echo ""
+echo "[`date`] update_sw - START"
+echo ""
 
-cd $basedir
+##______________________________________________________________________________
+##                                                                         Boost
+
+## Checkout or update working copy
+boost_update ()
+{
+    cd $basedir
+
+    if [[ -d boost ]] ; then
+        cd boost
+        echo "[Boost] Pulling in updates ..."
+        svn up
+    else
+        echo "[Boost] Checking out working copy ..."
+        svn co http://svn.boost.org/svn/boost/trunk boost
+    fi
+}
+
+## Build and install package
+boost_install ()
+{
+    cd $basedir/boost
+
+    echo "[Boost] Bootstrapping source code ..."
+    ./bootstrap.sh --prefix=$prefix
+
+    echo "[Boost] Build from source code ..."
+    ./b2
+
+    echo "[Boost] Clean up build directory ..."
+    ./b2 --clean
+}
+
+boost_update
+boost_install
 
 ##______________________________________________________________________________
 ##                                                                         CMake
@@ -21,32 +57,51 @@ echo ""
 echo "-- Updating installation of CMake ..."
 echo ""
 
-cd $basedir/CMake
-echo "--> Pulling in updates ..."
-git pull
-cd build
-echo "--> Cleaning up previous build ..."
-rm -rf *
-echo "--> Configuring code base ..."
-cmake -DCMAKE_INSTALL_PREFIX=$prefix ..
-make -j2 install
-echo "--> Cleaning up build directory ..."
-make clean
+cd $basedir
+
+if [[ -d CMake ]] ; then
+    cd CMake
+    echo "--> Pulling in updates ..."
+    git pull
+    cd build
+    echo "--> Cleaning up previous build ..."
+    rm -rf *
+    echo "--> Configuring code base ..."
+    cmake -DCMAKE_INSTALL_PREFIX=$prefix ..
+    make -j2 install
+    echo "--> Cleaning up build directory ..."
+    make clean
+else
+    echo "WARNING - no instructions yet for checking out CMake working copy."
+fi
 
 ##______________________________________________________________________________
 ##                                                                       Doxygen
 
-echo ""
-echo "-- Updating installation of Doxygen ..."
-echo ""
+doxygen_update ()
+{
+    cd $basedir
 
-cd $basedir/Doxygen
-git pull
-./configure prefix $prefix
-make
-make install
-echo "--> Cleaning up build directory ..."
-make clean
+    if [[ -d Doxygen ]] ; then
+        cd Doxygen
+        git pull
+    else
+        echo "[Doxygen] Checkout of working copy not yet defined!"
+    fi
+}
+
+doxygen_install ()
+{
+    cd $basedir/Doxygen
+    ./configure prefix $prefix
+    make
+    make install
+    echo "[Doxygen] Cleaning up build directory ..."
+    make clean
+}
+
+doxygen_update
+doxygen_install
 
 ##______________________________________________________________________________
 ##                                                                    LLVM/Clang
@@ -70,4 +125,6 @@ make clean
 
 ## Report finishing time of script
 
-echo "\n[`date`] update_sw - DONE\n"
+echo ""
+echo "[`date`] update_sw - DONE"
+echo ""
