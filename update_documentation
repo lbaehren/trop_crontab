@@ -64,6 +64,8 @@ fi
 ##___________________________________________________________________________
 ## Rebuild the documentation
 
+export PYTHONPATH=${SWIR_SOURCE}/source/python
+
 echo "-- Rebuilding documentation ..."
 mkdir ${SWIR_BUILD}
 cd ${SWIR_BUILD}
