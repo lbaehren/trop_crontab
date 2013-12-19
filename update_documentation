@@ -26,6 +26,10 @@ SOURCE=${SWIR_SOURCE}/release/share/doc/swir/html
 # Directory from which the generated Doxygen documenation will be served
 TARGET=${basedir}/swir
 
+## Make SSH keychain available to Git
+eval `keychain --noask --eval --agents ssh id_rsa` || exit 1
+
+
 ## ==========================================================================
 ##
 ##  Processing
@@ -50,7 +54,14 @@ tar -czf swir.tgz swir
 
 cd $basedir
 
-git clone ${SWIR_REPO} ${SWIR_SOURCE}
+if  [[ -d ${SWIR_SOURCE} ]] ; then
+    echo "-- Updating working copy ..."
+    cd ${SWIR_SOURCE}
+    git pull
+else
+    echo "-- Cloning repository into working copy ..."
+    git clone ${SWIR_REPO} ${SWIR_SOURCE}
+fi
 
 if [[ -z $1 ]] ;
 then
@@ -67,8 +78,9 @@ fi
 export PYTHONPATH=${SWIR_SOURCE}/source/python
 
 echo "-- Rebuilding documentation ..."
-mkdir ${SWIR_BUILD}
+mkdir -p ${SWIR_BUILD}
 cd ${SWIR_BUILD}
+rm -rf *
 cmake -DWITH_DOCUMENTATION=YES -DCMAKE_SEARCH_PREFIX=/opt/local/EOS/nadc_extern/x86_64 $SWIR_SOURCE
 make -j install
 
@@ -91,7 +103,7 @@ fi
 ## Clean up
 
 echo "-- Post-installation clean-up ..."
-rm -rf ${SWIR_SOURCE}
+rm -rf ${SWIR_BUILD}
 rm -f $basedir/swir.tgz
 
 ## Report end of script execution
