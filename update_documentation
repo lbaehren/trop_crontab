@@ -57,6 +57,7 @@ cd $basedir
 if  [[ -d ${SWIR_SOURCE} ]] ; then
     echo "-- Updating working copy ..."
     cd ${SWIR_SOURCE}
+    git checkout -- source/python
     git pull
 else
     echo "-- Cloning repository into working copy ..."
