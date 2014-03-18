@@ -1,93 +1,67 @@
 #!/bin/bash
 
+##
+##  TROPOMI OCAL Framework (ocalfw) developed at KNMI
+##
+
+## =============================================================================
+##  Global variables
+
 basedir=/home/larsb/Repositories/Work
 
-##______________________________________________________________________________
-## Steps:
-##
-## 1. Clone SVN to Git working copy
-## 2. Clone Git working copy to bare Git repo
-## 3. Push changes from bare Git repo to Github
-##
+## =============================================================================
+##  Functions
 
+## Clone from the original Subversion repository into local Git repositories
 update_local_repos ()
 {
     cd ${basedir}
 
     # Check if there already is a Git working copy from the original SVN
     if [[ -d ocalfw ]] ; then
+        echo "-- Rebasing Git working copy ..."
         cd ocalfw
         git svn rebase
     else
+        # Clone SVN to Git working copy
         git svn clone -s https://svn.knmi.nl/svn/tropocal/ocalfw ocalfw
+        # Clone Git working copy to bare Git repo
         git clone --bare ocalfw ocalfw.git
+        # Set up Git remote
+        cd ocalfw.git
+        git remote add tropomi git@github.com:Tropomi/ocalfw.git
     fi
 
     # Update bare reporitory from working copy
-    cd ${basedir}
-    cd ocalfw.git
+    echo "-- Updating bare Git repository ..."
+    cd ${basedir}/ocalfw.git
     git fetch
 }
 
+## Update the mirror hosted via the TROPOMI Github account
+update_github_mirror ()
+{
+    echo "-- Updating Github mirror repository ..."
+    cd ${basedir}
+    cd ocalfw.git
+    git push tropomi master
+}
+
+## Update the mirrors from the originan Subversion repository at KNMI
 update ()
 {
     update_local_repos
+    update_github_mirror
 }
 
-update
-
-exit
-
-##______________________________________________________________________________
-## Update working copy of OCAL framework developed by KNMI
-##  - Get latest changes from the KNMI Subversion server
-##  - Push changes to repository on Github
-##  - Fetch changes from personal fork on Github
-
-fetch_updates ()
-{
-    cd $basedir/ocalfw
-    echo "--> Get recent changes from SVN and update mirror on Github ..."
-    git svn rebase
-    git push tropomi master
-    echo "--> Fetch updates from fork and update local mirror ..."
-    git fetch origin
-    git fetch tropomi
-#    git push local --all
-}
+## =============================================================================
+##  Program main
 
 echo ""
 echo "[`date`] update_ocalfw - START"
 echo ""
 
-cd $basedir
-
-if [[ -d "ocalfw" ]] ; then
-
-    echo "-- Directory ocalfw found - updating contents ..."
-    fetch_updates
-
-else
-
-    echo "-- Directory ocalfw not found - starting checkout ..."
-
-    echo "--> Clone subversion repository into Git ..."
-#    git svn clone -s http://svn.knmi.nl/svn/tropocal/ocalfw ocalfw   # within KNMI
-    git svn clone -s https://svn.knmi.nl/svn/tropocal/ocalfw ocalfw   # outside KNMI
-
-    cd $basedir/ocalfw
-
-    ## Add remote: TROPOMI mirror of code base
-    git remote add tropomi git@github.com:Tropomi/ocalfw.git
-    git fetch tropomi
-
-    ## Add remote: Github mirror
-    git remote add origin git@github.com:lbaehren/ocalfw.git
-    git fetch origin
-
-fi
-
-## Report end of script executation
+update
 
 echo ""
 echo "[`date`] update_ocalfw - DONE"
