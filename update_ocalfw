@@ -1,6 +1,42 @@
 #!/bin/bash
 
-basedir=/home/larsb/CodeDevelopment/Work/TROPOMI
+basedir=/home/larsb/Repositories/Work
+
+##______________________________________________________________________________
+## Steps:
+##
+## 1. Clone SVN to Git working copy
+## 2. Clone Git working copy to bare Git repo
+## 3. Push changes from bare Git repo to Github
+##
+
+update_local_repos ()
+{
+    cd ${basedir}
+
+    # Check if there already is a Git working copy from the original SVN
+    if [[ -d ocalfw ]] ; then
+        cd ocalfw
+        git svn rebase
+    else
+        git svn clone -s https://svn.knmi.nl/svn/tropocal/ocalfw ocalfw
+        git clone --bare ocalfw ocalfw.git
+    fi
+
+    # Update bare reporitory from working copy
+    cd ${basedir}
+    cd ocalfw.git
+    git fetch
+}
+
+update ()
+{
+    update_local_repos
+}
+
+update
+
+exit
 
 ##______________________________________________________________________________
 ## Update working copy of OCAL framework developed by KNMI
