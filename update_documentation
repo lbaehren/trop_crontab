@@ -18,7 +18,7 @@
 
 basedir=/home/larsb/public_html/tropomi
 ## URL of the Git repository with the SWIR source code
-SWIR_REPO=git@github.com:lbaehren/swir.git
+SWIR_REPO=git@github.com:Tropomi/swir.git
 SWIR_SOURCE=${basedir}/swir_source
 SWIR_BUILD=${SWIR_SOURCE}/build
 # Directory within which the generated Doxygen documentation can be found
