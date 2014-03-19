@@ -9,6 +9,9 @@
 
 basedir=/home/larsb/Repositories/Work
 
+## Make SSH keychain available to Git
+eval `keychain --noask --eval --agents ssh id_rsa` || exit 1
+
 ## =============================================================================
 ##  Functions
 
@@ -22,20 +25,24 @@ update_local_repos ()
         echo "-- Rebasing Git working copy ..."
         cd ocalfw
         git svn rebase
+        git push local master
     else
         # Clone SVN to Git working copy
         git svn clone -s https://svn.knmi.nl/svn/tropocal/ocalfw ocalfw
         # Clone Git working copy to bare Git repo
         git clone --bare ocalfw ocalfw.git
+        # Set up remote for working copy
+        cd ${basedir}/ocalfw
+        git remote add local ${basedir}/ocalfw.git
         # Set up Git remote
-        cd ocalfw.git
+        cd ${basedir}/ocalfw.git
         git remote add tropomi git@github.com:Tropomi/ocalfw.git
     fi
 
     # Update bare reporitory from working copy
     echo "-- Updating bare Git repository ..."
     cd ${basedir}/ocalfw.git
-    git fetch
+    git fetch origin master
 }
 
 ## Update the mirror hosted via the TROPOMI Github account
@@ -47,13 +54,6 @@ update_github_mirror ()
     git push tropomi master
 }
 
-## Update the mirrors from the originan Subversion repository at KNMI
-update ()
-{
-    update_local_repos
-    update_github_mirror
-}
-
 ## =============================================================================
 ##  Program main
 
@@ -61,7 +61,10 @@ echo ""
 echo "[`date`] update_ocalfw - START"
 echo ""
 
-update
+## Update local Git repositories
+update_local_repos
+## Update the mirror hosted via the TROPOMI Github account
+update_github_mirror
 
 echo ""
 echo "[`date`] update_ocalfw - DONE"
