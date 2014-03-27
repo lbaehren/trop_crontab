@@ -22,10 +22,10 @@ update_local_repos ()
 
     # Check if there already is a Git working copy from the original SVN
     if [[ -d ocalfw ]] ; then
-        echo "-- Rebasing Git working copy ..."
+        echo "-- Rebasing Git working copy"
         cd ocalfw
         git svn rebase
-        git push local master
+        echo "-- Rebasing Git working copy - done"
     else
         # Clone SVN to Git working copy
         git svn clone -s https://svn.knmi.nl/svn/tropocal/ocalfw ocalfw
@@ -40,18 +40,29 @@ update_local_repos ()
     fi
 
     # Update bare reporitory from working copy
-    echo "-- Updating bare Git repository ..."
+    echo "-- Updating bare Git repository"
+    cd ${basedir}/ocalfw
+    git push local master
     cd ${basedir}/ocalfw.git
     git fetch origin master
+    echo "-- Updating bare Git repository - done"
 }
 
 ## Update the mirror hosted via the TROPOMI Github account
 update_github_mirror ()
 {
-    echo "-- Updating Github mirror repository ..."
-    cd ${basedir}
-    cd ocalfw.git
+    echo "-- Updating Github mirror repository"
+    cd ${basedir}/ocalfw.git
     git push tropomi master
+    echo "-- Updating Github mirror repository - done"
+}
+
+## Update the repositories
+update ()
+{
+    update_local_repos
+    ## Update the mirror hosted via the TROPOMI Github account
+    update_github_mirror
 }
 
 ## =============================================================================
@@ -61,10 +72,7 @@ echo ""
 echo "[`date`] update_ocalfw - START"
 echo ""
 
-## Update local Git repositories
-update_local_repos
-## Update the mirror hosted via the TROPOMI Github account
-update_github_mirror
+update
 
 echo ""
 echo "[`date`] update_ocalfw - DONE"
