@@ -1,0 +1,72 @@
+#!/bin/bash
+
+## =============================================================================
+
+basedir=/home/larsb/CodeDevelopment/tmp
+branch=cpp
+
+## =============================================================================
+##
+##  Processing
+##
+## =============================================================================
+
+##______________________________________________________________________________
+## Check out working copy of the source code
+
+checkout_code ()
+{
+    echo "-- Checking out working copy of the source code"
+
+    cd ${basedir}
+    git clone git@github.com:lbaehren/swir.git
+
+    cd ${basedir}/swir
+    git checkout ${branch}
+
+    echo "-- Checking out working copy of the source code - DONE"
+}
+
+##______________________________________________________________________________
+## Configuration for building and testing
+
+configure_project ()
+{
+    echo "-- Running project configuration step"
+
+    cd ${basedir}/swir
+    mkdir build
+    cd build
+    cmake -DWITH_TESTS=TRUE -DWITH_DOCUMENTATION=TRUE ..
+
+    echo "-- Running project configuration step - DONE"
+}
+
+##______________________________________________________________________________
+## Run the tests and clean up afterwards
+
+run_tests ()
+{
+    cd ${basedir}/swir/build
+
+    for STAGE in Start Configure Build Submit Test Submit MemCheck Submit
+    {
+        make Experimental${STAGE}
+    }
+
+    echo "-- Cleaning up temporary files"
+    cd ${basedir}
+    rm -rf swir
+    echo "-- Cleaning up temporary files - DONE"
+}
+
+## =============================================================================
+##
+##  Program main
+##
+## =============================================================================
+
+checkout_code
+configure_project
+run_tests
+
