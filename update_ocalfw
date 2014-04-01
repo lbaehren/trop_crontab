@@ -8,6 +8,7 @@
 ##  Global variables
 
 basedir=/home/larsb/Repositories/Work
+repo_knmi=https://svn.knmi.nl/svn/tropocal/ocalfw
 
 ## Make SSH keychain available to Git
 eval `keychain --noask --eval --agents ssh id_rsa` || exit 1
@@ -15,7 +16,9 @@ eval `keychain --noask --eval --agents ssh id_rsa` || exit 1
 ## =============================================================================
 ##  Functions
 
+##______________________________________________________________________________
 ## Clone from the original Subversion repository into local Git repositories
+
 update_local_repos ()
 {
     cd ${basedir}
@@ -38,30 +41,47 @@ update_local_repos ()
         cd ${basedir}/ocalfw.git
         git remote add tropomi git@github.com:Tropomi/ocalfw.git
     fi
+}
 
-    # Update bare reporitory from working copy
+##______________________________________________________________________________
+## Update bare reporitory from working copy
+
+update_local_mirror ()
+{
     echo "-- Updating bare Git repository"
+
     cd ${basedir}/ocalfw
     git push local master
-    cd ${basedir}/ocalfw.git
-    git fetch origin master
+
+#    cd ${basedir}/ocalfw.git
+#    git fetch origin master
+
     echo "-- Updating bare Git repository - done"
 }
 
+##______________________________________________________________________________
 ## Update the mirror hosted via the TROPOMI Github account
+
 update_github_mirror ()
 {
     echo "-- Updating Github mirror repository"
+
     cd ${basedir}/ocalfw.git
     git push tropomi master
+
     echo "-- Updating Github mirror repository - done"
 }
 
+##______________________________________________________________________________
 ## Update the repositories
+
 update ()
 {
+    # Create or update local working copy
     update_local_repos
-    ## Update the mirror hosted via the TROPOMI Github account
+    # Update local mirror repository
+    update_local_mirror
+    # Update mirror repository hosted on Github
     update_github_mirror
 }
 
