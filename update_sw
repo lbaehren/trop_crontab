@@ -1,7 +1,16 @@
 #!/bin/bash
 
+#
+#  /home/larsb
+#        `-- sw               ...  prefix
+#            |-- bin
+#            |-- include
+#            |-- lib
+#            `-- src          ...  basedir
+#
+
 prefix=/home/larsb/sw
-basedir=$prefix/src
+basedir=${prefix}/src
 
 ## =============================================================================
 ##
@@ -9,18 +18,13 @@ basedir=$prefix/src
 ##
 ## =============================================================================
 
-## Report start time of script
-echo ""
-echo "[`date`] update_sw - START"
-echo ""
-
 ##______________________________________________________________________________
 ##                                                                         Boost
 
 ## Checkout or update working copy
 boost_update ()
 {
-    cd $basedir
+    cd ${basedir}
 
     if [[ -d boost ]] ; then
         cd boost
@@ -47,33 +51,71 @@ boost_install ()
     ./b2 --clean
 }
 
-boost_update
-boost_install
+##______________________________________________________________________________
+##                                                                    LLVM/Clang
+
+clang_update ()
+{
+    cd ${basedir}
+
+    if [[ -d llvm ]] ; then
+        cd ${basedir}/llvm
+        echo "[LLVM] Pulling in updates ..."
+        git pull
+        cd ${basedir}/llvm/tools/clang
+        git pull
+    else
+        echo "[LLVM] Checking out working copy ..."
+    fi
+}
+
+clang_install ()
+{
+    cd ${basedir}/llvm
+
+    ## Fresh build directory
+    rm -rf build
+    mkdir build
+
+    ## Configure project to build
+    cd build
+    cmake -DCMAKE_INSTALL_PREFIX=$prefix ..
+    make -j2 install
+
+    ## Post-installation clean-up
+    cd ${basedir}/llvm
+    rm -rf build
+}
 
 ##______________________________________________________________________________
 ##                                                                         CMake
 
-echo ""
-echo "-- Updating installation of CMake ..."
-echo ""
+cmake_update ()
+{
+    cd $basedir
 
-cd $basedir
+    if [[ -d cmake ]] ; then
+        cd $basedir/cmake
+        git pull
+    else
+        git clone git://cmake.org/cmake.git
+    fi
+}
 
-if [[ -d CMake ]] ; then
-    cd CMake
-    echo "--> Pulling in updates ..."
-    git pull
+## Build and install package
+cmake_install ()
+{
+    cd $basedir/cmake
+
+    echo "[CMake] Bootstrapping source code ..."
+    rm -rf build
+    mkdir build
     cd build
-    echo "--> Cleaning up previous build ..."
-    rm -rf *
-    echo "--> Configuring code base ..."
     cmake -DCMAKE_INSTALL_PREFIX=$prefix ..
-    make -j2 install
-    echo "--> Cleaning up build directory ..."
-    make clean
-else
-    echo "WARNING - no instructions yet for checking out CMake working copy."
-fi
+
+    echo "[CMake] Build from source code ..."
+    make && make install
+}
 
 ##______________________________________________________________________________
 ##                                                                       Doxygen
@@ -82,49 +124,106 @@ doxygen_update ()
 {
     cd $basedir
 
-    if [[ -d Doxygen ]] ; then
-        cd Doxygen
+    if [[ -d doxygen ]] ; then
+        cd doxygen
         git pull
     else
-        echo "[Doxygen] Checkout of working copy not yet defined!"
+        git clone https://github.com/doxygen/doxygen.git
     fi
 }
 
+## Build and install package
 doxygen_install ()
 {
-    cd $basedir/Doxygen
-    ./configure prefix $prefix
+    cd $basedir/doxygen
+
+    echo "[Doxygen] Configuring package ..."
+    ./configure --prefix $prefix
+
+    echo "[Doxygen] Building package ..."
     make
+
+    echo "[Doxygen] Installing package ..."
     make install
+
     echo "[Doxygen] Cleaning up build directory ..."
     make clean
 }
 
-doxygen_update
-doxygen_install
-
 ##______________________________________________________________________________
-##                                                                    LLVM/Clang
+##                                                                      Valgrind
+
+valgrind_install ()
+{
+    cd $basedir
+
+    if [[ -d valgrind ]] ; then
+        cd valgrind
+        svn up
+    else
+        git clone https://github.com/svn2github/valgrind.git
+    fi
+}
+
+valgrind_update ()
+{
+    echo "[update_sw::Valgrind] Updating installation"
+
+    cd ${basedir}/valgrind
+    ./autogen.sh
+    ./configure --prefix=${prefix}
+    make
+    make install
+
+    echo "[update_sw::Valgrind] Updating installation - DONE"
+}
+
+## =============================================================================
+##
+##  Program main
+##
+## =============================================================================
 
 echo ""
-echo "-- Updating installation of LLVM ..."
+echo "[`date`] update_sw - START"
 echo ""
 
-cd $basedir/llvm
-git pull
-cd $basedir/llvm/tools/clang
-git pull
-cd $basedir/llvm/build
-echo "--> Cleaning up previous build ..."
-rm -rf *
-echo "--> Configuring code base ..."
-cmake -DCMAKE_INSTALL_PREFIX=$prefix ..
-make -j2 install
-echo "--> Cleaning up build directory ..."
-make clean
-
-## Report finishing time of script
+until [ -z "$1" ]
+do
+    case $1 in
+        boost)
+            boost_update
+            boost_install
+        ;;
+        clang)
+            clang_update
+            clang_install
+        ;;
+        cmake)
+            cmake_update
+            cmake_install
+        ;;
+        doxygen)
+            doxygen_update
+            doxygen_install
+        ;;
+        valgrind)
+            valgrind_update
+            valgrind_install
+        ;;
+        *)
+            for PACKAGE in boost clang cmake doxygen valgrind
+            {
+                ${PACKAGE}_update
+                ${PACKAGE}_install
+            }
+        ;;
+    esac
+    shift
+done
 
 echo ""
 echo "[`date`] update_sw - DONE"
 echo ""
+
+exit 0
