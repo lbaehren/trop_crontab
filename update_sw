@@ -188,39 +188,42 @@ echo ""
 echo "[`date`] update_sw - START"
 echo ""
 
-until [ -z "$1" ]
-do
-    case $1 in
-        boost)
-            boost_update
-            boost_install
-        ;;
-        clang)
-            clang_update
-            clang_install
-        ;;
-        cmake)
-            cmake_update
-            cmake_install
-        ;;
-        doxygen)
-            doxygen_update
-            doxygen_install
-        ;;
-        valgrind)
-            valgrind_update
-            valgrind_install
-        ;;
-        *)
-            for PACKAGE in boost clang cmake doxygen valgrind
-            {
-                ${PACKAGE}_update
-                ${PACKAGE}_install
-            }
-        ;;
-    esac
-    shift
-done
+if [ -z "$1" ]
+then
+    for PACKAGE in boost clang cmake doxygen valgrind
+    {
+        ${PACKAGE}_update
+        ${PACKAGE}_install
+    }
+else
+    until [ -z "$1" ]
+    do
+        case $1 in
+            boost)
+                boost_update
+                boost_install
+            ;;
+            clang)
+                clang_update
+                clang_install
+            ;;
+            cmake)
+                cmake_update
+                cmake_install
+            ;;
+            doxygen)
+                doxygen_update
+                doxygen_install
+            ;;
+            valgrind)
+                valgrind_update
+                valgrind_install
+            ;;
+        esac
+        shift
+    done
+fi
+
 
 echo ""
 echo "[`date`] update_sw - DONE"
