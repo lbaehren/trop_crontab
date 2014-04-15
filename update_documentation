@@ -26,10 +26,6 @@ SOURCE=${SWIR_SOURCE}/release/share/doc/swir/html
 # Directory from which the generated Doxygen documenation will be served
 TARGET=${basedir}/swir
 
-## Make SSH keychain available to Git
-eval `keychain --noask --eval --agents ssh id_rsa` || exit 1
-
-
 ## ==========================================================================
 ##
 ##  Processing
