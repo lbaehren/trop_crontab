@@ -1,0 +1,40 @@
+#!/bin/bash
+
+## === Variables ===============================================================
+
+basedir=/data/larsb/TROPOMI/ocalfw/ckd
+
+## === Processing ==============================================================
+
+if [[ -d ${basedir} ]] ; then
+    cd ${basedir}
+else
+    echo "-- Working directory not found - creating it now."
+    mkdir -p ${basedir}
+    cd ${basedir}
+fi
+
+echo "-- Cleaning up old CKD files ..."
+rm -f *.nc
+
+echo "-- Fetch latest versions prepared by Evert ..."
+cp -v /deos/evertr/data/ckd/swir*.nc .
+cp -v /deos/evertr/data/ckd/dn2v-ckd.nc swir-dn2v-ckd.nc
+
+## Inspection of the CKD files
+
+for FILE in `ls *.nc`
+{
+    echo ""
+    echo "${FILE}"
+    echo "----------------------------------------"
+    h5ls -r ${FILE}
+    echo "----------------------------------------"
+}
+
+# Copy files to IDAF
+
+echo "-- Copy latest CKD files to IDAF ..."
+scp *.nc idaf:/data/local/users/larsb/ckd
+
+echo "--  DONE"
