@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #
-#  /home/larsb
+#  /data/larsb
 #        `-- sw               ...  prefix
 #            |-- bin
 #            |-- include
@@ -9,7 +9,7 @@
 #            `-- src          ...  basedir
 #
 
-prefix=/home/larsb/sw
+prefix=/data/larsb/sw
 basedir=${prefix}/src
 
 ## =============================================================================
@@ -21,10 +21,11 @@ basedir=${prefix}/src
 ##______________________________________________________________________________
 ##                                                                         Boost
 
-## Checkout or update working copy
 boost_update ()
 {
     cd ${basedir}
+
+    ## Checkout or update working copy
 
     if [[ -d boost ]] ; then
         cd boost
@@ -34,12 +35,10 @@ boost_update ()
         echo "[Boost] Checking out working copy ..."
         svn co http://svn.boost.org/svn/boost/trunk boost
     fi
-}
 
-## Build and install package
-boost_install ()
-{
-    cd $basedir/boost
+    ## Build and install package
+
+    cd ${basedir}/boost
 
     echo "[Boost] Bootstrapping source code ..."
     ./bootstrap.sh --prefix=$prefix
@@ -58,6 +57,8 @@ clang_update ()
 {
     cd ${basedir}
 
+    ## Checkout or update working copy
+
     if [[ -d llvm ]] ; then
         cd ${basedir}/llvm
         echo "[LLVM] Pulling in updates ..."
@@ -66,11 +67,14 @@ clang_update ()
         git pull
     else
         echo "[LLVM] Checking out working copy ..."
+        git clone http://llvm.org/git/llvm.git
+        echo "[LLVM::Clang] Checking out working copy ..."
+        cd llvm/tools
+        git clone http://llvm.org/git/clang.git
     fi
-}
 
-clang_install ()
-{
+    ## Build and install package
+
     cd ${basedir}/llvm
 
     ## Fresh build directory
@@ -94,17 +98,17 @@ cmake_update ()
 {
     cd $basedir
 
+    ## Checkout or update working copy
+
     if [[ -d cmake ]] ; then
         cd $basedir/cmake
         git pull
     else
         git clone git://cmake.org/cmake.git
     fi
-}
 
-## Build and install package
-cmake_install ()
-{
+    ## Build and install package
+
     cd $basedir/cmake
 
     echo "[CMake] Bootstrapping source code ..."
@@ -114,7 +118,7 @@ cmake_install ()
     cmake -DCMAKE_INSTALL_PREFIX=$prefix ..
 
     echo "[CMake] Build from source code ..."
-    make && make install
+    make -j2 && make install
 }
 
 ##______________________________________________________________________________
@@ -130,18 +134,16 @@ doxygen_update ()
     else
         git clone https://github.com/doxygen/doxygen.git
     fi
-}
 
-## Build and install package
-doxygen_install ()
-{
+    ## Build and install package
+
     cd $basedir/doxygen
 
     echo "[Doxygen] Configuring package ..."
     ./configure --prefix $prefix
 
     echo "[Doxygen] Building package ..."
-    make
+    make -j2
 
     echo "[Doxygen] Installing package ..."
     make install
@@ -153,9 +155,11 @@ doxygen_install ()
 ##______________________________________________________________________________
 ##                                                                      Valgrind
 
-valgrind_install ()
+valgrind_update ()
 {
     cd $basedir
+
+    ## Checkout or update working copy
 
     if [[ -d valgrind ]] ; then
         cd valgrind
@@ -163,17 +167,16 @@ valgrind_install ()
     else
         git clone https://github.com/svn2github/valgrind.git
     fi
-}
 
-valgrind_update ()
-{
-    echo "[update_sw::Valgrind] Updating installation"
+    ## Build and install package
 
     cd ${basedir}/valgrind
+
+    mkdir -p VEX
+
     ./autogen.sh
     ./configure --prefix=${prefix}
-    make
-    make install
+    make -j2 && make install
 
     echo "[update_sw::Valgrind] Updating installation - DONE"
 }
@@ -188,12 +191,22 @@ echo ""
 echo "[`date`] update_sw - START"
 echo ""
 
+## Check if the base directory does exists - if not, create it.
+
+if [[ -d ${basedir} ]] ; then
+    echo "Source directory ${basedir} found."
+else
+    echo "Source directory ${basedir} not found - creating it now!"
+    mkdir -p ${basedir}
+fi
+
+## Handle command line options
+
 if [ -z "$1" ]
 then
     for PACKAGE in boost clang cmake doxygen valgrind
     {
         ${PACKAGE}_update
-        ${PACKAGE}_install
     }
 else
     until [ -z "$1" ]
@@ -201,23 +214,18 @@ else
         case $1 in
             boost)
                 boost_update
-                boost_install
             ;;
             clang)
                 clang_update
-                clang_install
             ;;
             cmake)
                 cmake_update
-                cmake_install
             ;;
             doxygen)
                 doxygen_update
-                doxygen_install
             ;;
             valgrind)
                 valgrind_update
-                valgrind_install
             ;;
         esac
         shift

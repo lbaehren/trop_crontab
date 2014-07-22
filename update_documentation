@@ -6,105 +6,60 @@
 ##
 ## ==========================================================================
 
+
 #
-# /home/larsb
-#       `-- public_html
-#           `-- tropomi            ...  basedir
-#               |-- swir_source    ...  SWIR_SOURCE
-#               |   |-- build
-#               |   `-- release
-#               `-- swir           ...  TARGET
+#  /
+#  |-- data
+#  |   `-- larsb
+#  |       `-- tmp             ...  DIR_TMP
+#  |           |-- ocalfw
+#  |           `-- swir
+#  `-- home
+#      `-- larsb
+#          `-- public_html     ...  DIR_WWW
+#              `-- tropomi     ...  DIR_WWW_TROPOMI
+#                  |-- ocalfw
+#                  `-- swir
 #
 
-basedir=/home/larsb/public_html/tropomi
-## URL of the Git repository with the SWIR source code
-SWIR_REPO=git@github.com:Tropomi/swir.git
-SWIR_SOURCE=${basedir}/swir_source
-SWIR_BUILD=${SWIR_SOURCE}/build
-# Directory within which the generated Doxygen documentation can be found
-SOURCE=${SWIR_SOURCE}/release/share/doc/swir/html
-# Directory from which the generated Doxygen documenation will be served
-TARGET=${basedir}/swir
+DIR_TMP=/data/larsb/tmp
+
+DIR_WWW=/home/larsb/public_html
+DIR_WWW_TROPOMI=${DIR_WWW}/tropomi
+
+REPO_OCALFW=https://svn.knmi.nl/svn/tropocal/ocalfw
+REPO_SWIR=git@github.com:Tropomi/swir.git
 
 ## ==========================================================================
 ##
-##  Processing
+##  Functions
 ##
 ## ==========================================================================
 
-echo ""
-echo "[`date`] update_documentation - START"
-echo ""
+update_ocalfw ()
+{
+    cd ${DIR_TMP}
 
-##___________________________________________________________________________
-## Backup of current documentation pages
+    # Check out a working copy
+    if [[ -d ocalfw ]] ; then
+        echo "[OCALFW] Pulling in updates ..."
+        cd ocalfw
+        git svn rebase
+    else
+        echo "[OCALFW] Checking out working copy ..."
+        git svn clone -s ${REPO_OCALFW} ocalfw
+        cd ocalfw
+    fi
 
-cd $basedir
+    # Generate documentation
+    make doc_doxygen
+    
+    # Move documentation
+    rm -rf ${DIR_WWW_TROPOMI}/ocalfw
+    mv doc/manual/html ${DIR_WWW_TROPOMI}/ocalfw
+}
 
-echo "-- Backup of current documentation pages ..."
+## ==========================================================================
 
-tar -czf swir.tgz swir
+update_ocalfw
 
-##___________________________________________________________________________
-## Clone working copy from repository
-
-cd $basedir
-
-if  [[ -d ${SWIR_SOURCE} ]] ; then
-    echo "-- Updating working copy ..."
-    cd ${SWIR_SOURCE}
-    git checkout -- source/python
-    git pull
-else
-    echo "-- Cloning repository into working copy ..."
-    git clone ${SWIR_REPO} ${SWIR_SOURCE}
-fi
-
-if [[ -z $1 ]] ;
-then
-        echo "-- Building dcumentation from branch 'master' ..."
-else
-	cd ${SWIR_SOURCE}
-	git checkout $1
-        echo "-- Building dcumentation from branch '$1' ..."
-fi
-
-##___________________________________________________________________________
-## Rebuild the documentation
-
-export PYTHONPATH=${SWIR_SOURCE}/source/python
-
-echo "-- Rebuilding documentation ..."
-mkdir -p ${SWIR_BUILD}
-cd ${SWIR_BUILD}
-rm -rf *
-cmake -DWITH_DOCUMENTATION=YES -DCMAKE_SEARCH_PREFIX=/opt/local/EOS/nadc_extern/x86_64 $SWIR_SOURCE
-make -j install
-
-##___________________________________________________________________________
-## Update the online version of the documentation
-
-echo "-- Updating online version of documentation ..."
-rm -rf $TARGET
-cp -r $SOURCE $TARGET
-
-if [ -d $TARGET ] ; then
-    echo "Successfully updated online version."
-else
-    echo "Update of online documentation failed - reinstating previous version."
-    cd $basedir
-    tar -xzf swir.tgz
-fi
-
-##___________________________________________________________________________
-## Clean up
-
-echo "-- Post-installation clean-up ..."
-rm -rf ${SWIR_BUILD}
-rm -f $basedir/swir.tgz
-
-## Report end of script execution
-
-echo ""
-echo "[`date`] update_documentation - DONE"
-echo ""

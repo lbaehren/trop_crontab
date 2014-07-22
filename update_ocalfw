@@ -37,6 +37,7 @@ update_local_repos ()
         # Set up Git remote
         cd ${basedir}/ocalfw.git
         git remote add tropomi git@github.com:Tropomi/ocalfw.git
+        git remote add loki idaf:/home/larsb/Repositories/ocalfw.git
     fi
 }
 
@@ -70,6 +71,15 @@ update_github_mirror ()
 }
 
 ##______________________________________________________________________________
+## Update mirror on Loki
+
+update_mirror_loki ()
+{
+    cd ${basedir}/ocalfw.git
+    git push loki master
+}
+
+##______________________________________________________________________________
 ## Update the repositories
 
 update ()
@@ -78,6 +88,8 @@ update ()
     update_local_repos
     # Update local mirror repository
     update_local_mirror
+    # Update mirror on Loki
+    update_mirror_loki
     # Update mirror repository hosted on Github
     update_github_mirror
 }
