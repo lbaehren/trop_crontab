@@ -3,9 +3,15 @@
 ## === Variables ===============================================================
 
 basedir=/data/larsb/TROPOMI/ocalfw/ckd
+sourcedir=/nfs/TROPOMI2/evertr/ckd/data
 
 ## === Processing ==============================================================
 
+# Change into the source directory once; itf it has not yet been mounted already
+# this action will trigger the automount.
+cd ${sourcedir}
+
+# Check of directory exist, where we are collection the CKD data
 if [[ -d ${basedir} ]] ; then
     cd ${basedir}
 else
@@ -18,8 +24,7 @@ echo "-- Cleaning up old CKD files ..."
 rm -f *.nc
 
 echo "-- Fetch latest versions prepared by Evert ..."
-cp -v /deos/evertr/data/ckd/swir*.nc .
-cp -v /deos/evertr/data/ckd/dn2v-ckd.nc swir-dn2v-ckd.nc
+cp -v ${sourcedir}/swir*.nc .
 
 ## Inspection of the CKD files
 
