@@ -1,0 +1,185 @@
+# Copy this file to default.yaml and fill in the values between <<< >>> characters with
+# values that are applicable to your system.
+
+# This is a YAML file (see: http://pyyaml.org/wiki/PyYAMLDocumentation#YAMLsyntax).
+# YAML is a super-set of JSON (see http://www.json.org/) and JSON is close to how Python
+# represents dictionaries and lists. Note:
+#   - use null to represent a Python None value in YAML
+#   - use true and false (starting with lower case) to represent booleans.
+
+# If you want to add new configuration options to this file you must first discuss this with
+# the rest of the team since everybody will then have to update their local default.yaml file!
+
+{
+    # The directory.ocal_package will be set automatically by the framework.
+    # directory.ocal_package = # will be ignored.
+
+    # Location where you have checked out the ocalfw repository, e.g.: "/data/WNhome/kenter/tropomi/src/ocalfw
+    "directory.ocal_repo"  : "/data/larsb/tropomi/ocalfw",
+    "directory.tasks"      : "$(directory.ocal_repo)/tasks",
+    "directory.tools"      : "$(directory.ocal_repo)/tools",
+    "directory.ckd_sets"   : "$(directory.ocal_repo)/keydata_sets",
+
+    # ---- Results directories ----
+    # Results directory where the output of the calculations will be stored.
+    # This should be an existing directory that you created just for this purpose.
+    # It should preferably be a local drive, not a network share,
+    # e.g.: "/data/local/nosync/users/your_name/results
+    "directory.results"   : "/data/larsb/tropomi/ocalfw/results",
+
+    # Tropomi results directories.
+    "directory.results_trop_ckd" : "$(directory.results)/trop/ckd",
+    "directory.results_trop_msm" : "$(directory.results)/trop/msm",
+
+    # Setting the results_trop_msm directory to a location outside the results directory
+    # enables you to use a msm repository that is shared by multiple users.
+    #"directory.results_trop_msm" : "/data/storage/trop_lx/latest/trop/msm",
+
+    # ---- Level-0 data directory ----
+    "directory.L0data" : "/Users/lars/Work/TROPOMI/Data/ocalfw/inputs",
+    #"directory.L0data" : "/data/storage/trop_l0", # bhltrdev / bhltrtst
+    #"directory.L0data" : "/data/data01/trop_l0",  # prism
+    #"directory.L0data" : "/data/storage/trop_l0", # IDAF
+
+    # Data with test input. Only use during algorithm development please.
+    "directory.test_data" : "/Users/lars/Work/TROPOMI/Data/ocalfw/trop_sim", # IDAF location
+
+    # ---- L01b processor settings ----
+    "omi_L01b_processor.directory"       : "$(directory.ocal_repo)", # not on IDAF systems
+    #"omi_L01b_processor.directory"       : "/home/tropocal/l01bproc/latest",  # bhltrdev / bhltrtst
+    #"omi_L01b_processor.directory"       : "/data/data02/l01bproc/latest",  # prism
+    "omi_L01b_processor.executable"      : "$(omi_L01b_processor.directory)/bin/CORE_Processor.exe",
+    "omi_L01b_processor.ld_library_path" : "$(omi_L01b_processor.directory)/lib:/opt/lib",
+    #"omi_L01b_processor.malloc_check"    : "1", # enable to guard against double free or corruption (fasttop) in glibc
+    "omi_L01b_processor.def_properties"  : "$(directory.ocal_package)/scheduler/processor/cfg/ocal_omi.cfg",
+
+    "trop_L01b_processor.directory"       : "$(directory.ocal_repo)",
+    #"trop_L01b_processor.directory"       : "/home/tropocal/l01bproc/latest",  # bhltrdev / bhltrtst
+    #"trop_L01b_processor.directory"       : "/data/data02/l01bproc/latest",  # prism
+    #"trop_L01b_processor.directory"       : "/data/storage/users/tropproc/l01bproc/latest", # idaf
+    "trop_L01b_processor.executable"      : "$(trop_L01b_processor.directory)/bin/CORE_Processor.exe",
+    "trop_L01b_processor.ld_library_path" : "$(trop_L01b_processor.directory)/lib:/opt/lib",
+    #"trop_L01b_processor.malloc_check"    : "1", # enable to guard against double free or corruption (fasttop) in glibc
+
+    # Configuration file with properties that will be passed to the processor when executed
+    "trop_L01b_processor.def_properties" : "$(directory.ocal_package)/scheduler/processor/cfg/ocal_trop.cfg",
+
+    # ---- Misc settings ----
+    # Tropomi detector regions file
+    "tropomi.regions" : "$(trop_L01b_processor.directory)/cfg/trl01b.regiontable.xml",
+
+    # Multi processing settings
+    "nr_processes"   : 24,  # Maximum number of parallel processes running an algorithm.
+
+    # Use the h5py ("hdf") or netCDF4 ("ncdf") library
+    "lx_reader_type" : "ncdf",
+
+    # Location of the dot tool from the graphviz package. (Default use first from $PATH)
+    # Optional: if not set, the framework will not generate graph visualizations
+    # of the processing tables.
+    "dot_executable" : "dot",
+
+    # ---- Global plot target settings ----
+    "plot.to_pdf"    : true,  # Best to always set this to true.
+    "plot.to_mpdf"   : false,  # Multiple PDFs, one page per file for including in Latex
+    "plot.to_eps"    : false, # Encapsulated postscript
+    "plot.to_svg"    : false, # Scalable vector graphsics.
+    "plot.to_png"    : false, # Useful when generating reports.
+    "plot.to_jpg"    : false, # Useful when generating reports.
+    "plot.to_qt"     : false, # The figure viewer implemented using QT
+    "plot.to_screen" : false,
+
+    # Matplotlib settings. <<<Please uncomment them if you want to use the FigureViewer.>>>
+    # The key without 'matplotlib.' prefix will be set in the matplotlib global parameters
+    # via matplotlib.rcParams[key] in ocal.init()
+    # This mechanism is used so that the user doesn't have to update the ~/.matplotlib/matplotlibrc
+    # file as well.
+    #"matplotlib.backend"     : "Qt4Agg",
+    #"matplotlib.backend.qt4" : "PySide",
+    #"matplotlib.text.usetex" : true,  # TODO: should this be configurable? For now use at your own risk!
+
+    #########################
+    # Logging configuration #
+    #########################
+
+    "log_config" :
+    {
+        "formatters": {
+            "development": {
+                "format" : "%(asctime)s : %(processName)-11s : %(filename)25s:%(lineno)-4s : %(levelname)-7s: %(message)s"
+            },
+            "operational": {
+                "format" : "%(asctime)s : %(processName)-11s : %(filename)25s:%(lineno)-4s : %(levelname)-7s: %(message)s"
+            }
+            #"task": {
+            #    "format" : "%(asctime)s : %(name)-30s : %(levelname)-7s: %(message)s"
+            #}
+        },
+        "handlers": {
+            "console" : {
+                "class"     : "logging.StreamHandler",
+                "formatter" : "development",
+                "level"     : "DEBUG",
+                "stream"    : "ext://sys.stderr"
+            },
+
+            "file": {         # Example to log to a file. Not enabled by default
+                "class"     : "logging.FileHandler",
+                "formatter" : "operational",
+                "level"     : "INFO",
+                "filename"  : "ocalfw_example.log",
+                "mode"      : "w",  # Change to "a" to append to the old log file.
+                "delay"     : true, # If false the file will be generated even if tha logger is not active
+            },
+
+            # The task_dir log handlers is a special handler: If the filename contains % format characters,
+            # the OCAL framework will substitute the date/time at start into the log file name.
+            # This can generate a lot of log files so it's probably best to log to a destination outide the
+            # the OCAL framework directory as to not interfere with Subversion and Eclipse.
+            "task_dir": {
+                "class"     : "logging.FileHandler", # do not change!
+                "formatter" : "operational",
+                "level"     : "DEBUG",
+                "filename"  : "tasks.log",
+                #"filename"  : "/home/<your_user_name>/logs/tasks.%Y-%m-%d_%H-%M-%S.log",
+                "mode"      : "w",
+                "delay"     : true,
+            },
+
+            # The results_dir log handler si a special handler: the OCAL framework will set the
+            # filename to be in the results directory of each task.
+            "results_dir": {
+                "class"     : "logging.FileHandler", # do not change!
+                "formatter" : "operational",
+                "level"     : "DEBUG",
+                "filename"  : "/dev/null", # will be set automatically by the framework
+                "mode"      : "w",
+            },
+
+        },
+
+        # Here you can tweak the log messages that you will see. For example, set the
+        # level of the ocal.lib logger to DEBUG to see all debug messages that originate
+        # from the ocal.lib package.
+
+        "root" : {
+            "level"    : "DEBUG",
+            "handlers" : ["console", "task_dir", "results_dir"]
+        },
+        "loggers" : {
+            "__main__" : {
+                "level" : "DEBUG"
+            },
+            "ocal" : {
+                "level" : "DEBUG"
+            },
+            "ocal.algorithms" : {
+                "level" : "DEBUG"
+            },
+            #"ocal.lib" : {
+            #    "level" : "DEBUG"
+            #}
+        },
+        "version": 1  # do not change.
+    }
+}

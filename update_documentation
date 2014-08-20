@@ -11,8 +11,11 @@
 #  /
 #  |-- data
 #  |   `-- larsb
-#  |       `-- tmp             ...  DIR_TMP
+#  |       |-- tmp             ...  DIR_TMP
+#  |       |   `-- swir
+#  |       `-- tropomi
 #  |           |-- ocalfw
+#  |           |   `-- code
 #  |           `-- swir
 #  `-- home
 #      `-- larsb
@@ -22,7 +25,9 @@
 #                  `-- swir
 #
 
+basedir=/home/larsb/Documents/crontab
 DIR_TMP=/data/larsb/tmp
+DIR_TROPOMI=/data/larsb/tropomi
 
 DIR_WWW=/home/larsb/public_html
 DIR_WWW_TROPOMI=${DIR_WWW}/tropomi
@@ -35,6 +40,11 @@ REPO_SWIR=git@github.com:Tropomi/swir.git
 ##  Functions
 ##
 ## ==========================================================================
+
+config_ocalfw ()
+{
+    cp ${basedir}/ocalfw_config.yaml ${DIR_TMP}/ocalfw/ocal/cfg/config.yaml
+}
 
 update_ocalfw ()
 {
@@ -51,15 +61,18 @@ update_ocalfw ()
         cd ocalfw
     fi
 
+    # Copy the global configuration settings
+    config_ocalfw
+
     # Generate documentation
-    make doc_doxygen
-    
+    export PYTHONPATH=`pwd`
+    make docs
+
     # Move documentation
     rm -rf ${DIR_WWW_TROPOMI}/ocalfw
-    mv doc/manual/html ${DIR_WWW_TROPOMI}/ocalfw
+    mv doc/build/html ${DIR_WWW_TROPOMI}/ocalfw
 }
 
 ## ==========================================================================
 
 update_ocalfw
-
