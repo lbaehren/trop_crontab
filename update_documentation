@@ -12,6 +12,7 @@
 #  |-- data
 #  |   `-- larsb
 #  |       |-- tmp             ...  DIR_TMP
+#  |       |   |-- ocalfw
 #  |       |   `-- swir
 #  |       `-- tropomi
 #  |           |-- ocalfw
@@ -64,15 +65,21 @@ update_ocalfw ()
     # Copy the global configuration settings
     config_ocalfw
 
+    # Augment Python path
+    export PYTHONPATH=/opt/local/EOS/nadc_extern/wheezy/lib/python2.7/site-packages:`pwd`
+
     # Generate documentation
-    export PYTHONPATH=`pwd`
-    make docs
+    make doc_sphinx
 
     # Move documentation
     rm -rf ${DIR_WWW_TROPOMI}/ocalfw
-    mv doc/build/html ${DIR_WWW_TROPOMI}/ocalfw
+    mv doc/_build/html ${DIR_WWW_TROPOMI}/ocalfw
 }
 
+## ==========================================================================
+##
+##  Script 'main' section
+##
 ## ==========================================================================
 
 update_ocalfw

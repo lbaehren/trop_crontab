@@ -11,13 +11,9 @@
 # the rest of the team since everybody will then have to update their local default.yaml file!
 
 {
-    # The directory.ocal_package will be set automatically by the framework.
-    # directory.ocal_package = # will be ignored.
-
     # Location where you have checked out the ocalfw repository, e.g.: "/data/WNhome/kenter/tropomi/src/ocalfw
-    "directory.ocal_repo"  : "/data/larsb/tropomi/ocalfw",
+    "directory.ocal_repo"  : '/data/larsb/tropomi/ocalfw/code',
     "directory.tasks"      : "$(directory.ocal_repo)/tasks",
-    "directory.tools"      : "$(directory.ocal_repo)/tools",
     "directory.ckd_sets"   : "$(directory.ocal_repo)/keydata_sets",
 
     # ---- Results directories ----
@@ -25,7 +21,7 @@
     # This should be an existing directory that you created just for this purpose.
     # It should preferably be a local drive, not a network share,
     # e.g.: "/data/local/nosync/users/your_name/results
-    "directory.results"   : "/data/larsb/tropomi/ocalfw/results",
+    "directory.results"   : '/data/larsb/tropomi/ocalfw/results',
 
     # Tropomi results directories.
     "directory.results_trop_ckd" : "$(directory.results)/trop/ckd",
@@ -33,19 +29,28 @@
 
     # Setting the results_trop_msm directory to a location outside the results directory
     # enables you to use a msm repository that is shared by multiple users.
-    #"directory.results_trop_msm" : "/data/storage/trop_lx/latest/trop/msm",
+    #"directory.results_trop_msm" : "/data/storage02/trop_lx/latest/trop/msm",
 
     # ---- Level-0 data directory ----
-    "directory.L0data" : "/Users/lars/Work/TROPOMI/Data/ocalfw/inputs",
+    "directory.L0data_omi" : <<< OMI level-0 directory>>>,
+    #"directory.L0data_omi" : "/data/storage/omi_l0">>>, # bhltrdev / bhltrtst
+    "directory.L0data" : '/data/larsb/tropomi/ocalfw/inputs',
     #"directory.L0data" : "/data/storage/trop_l0", # bhltrdev / bhltrtst
     #"directory.L0data" : "/data/data01/trop_l0",  # prism
-    #"directory.L0data" : "/data/storage/trop_l0", # IDAF
+    #"directory.L0data" : "/data/storage01/trop_l0", # IDAF
 
-    # Data with test input. Only use during algorithm development please.
-    "directory.test_data" : "/Users/lars/Work/TROPOMI/Data/ocalfw/trop_sim", # IDAF location
+    # Data with test input. The trop_sim directory is not backed up regularly
+    # Only use during algorithm development please, not for final CKD.
+    "directory.test_data" : "<<< Location of simulated test data >>>",
+    #"directory.test_data" : "/data/storage01/trop_sim", # IDAF location
+
+    # Directory with SWIR detector CKD (and possible other input) that has been calculated off-line, i.e.
+    # not in the ocal framework. This data is needed to calculate the optical SWIR CKD.
+    "directory.swir_input"  : '/data/larsb/tropomi/ocalfw/inputs',
+    #"directory.swir_input" : "/data/storage01/trop_swir_input", # IDAF location
 
     # ---- L01b processor settings ----
-    "omi_L01b_processor.directory"       : "$(directory.ocal_repo)", # not on IDAF systems
+    "omi_L01b_processor.directory"       : "<<< Location of the OMI L01b processor >>>", # not on IDAF systems
     #"omi_L01b_processor.directory"       : "/home/tropocal/l01bproc/latest",  # bhltrdev / bhltrtst
     #"omi_L01b_processor.directory"       : "/data/data02/l01bproc/latest",  # prism
     "omi_L01b_processor.executable"      : "$(omi_L01b_processor.directory)/bin/CORE_Processor.exe",
@@ -53,10 +58,11 @@
     #"omi_L01b_processor.malloc_check"    : "1", # enable to guard against double free or corruption (fasttop) in glibc
     "omi_L01b_processor.def_properties"  : "$(directory.ocal_package)/scheduler/processor/cfg/ocal_omi.cfg",
 
-    "trop_L01b_processor.directory"       : "$(directory.ocal_repo)",
+    "trop_L01b_processor.directory"       : "/data/larsb/tropomi/l01b",
+    #"trop_L01b_processor.directory"       : "/data/storage/users/tropproc/l01bproc/nightly",  # bhltrodin / bhltrloki
     #"trop_L01b_processor.directory"       : "/home/tropocal/l01bproc/latest",  # bhltrdev / bhltrtst
     #"trop_L01b_processor.directory"       : "/data/data02/l01bproc/latest",  # prism
-    #"trop_L01b_processor.directory"       : "/data/storage/users/tropproc/l01bproc/latest", # idaf
+    #"trop_L01b_processor.directory"       : "/data/storage01/users/tropproc/l01bproc/nightly", # idaf
     "trop_L01b_processor.executable"      : "$(trop_L01b_processor.directory)/bin/CORE_Processor.exe",
     "trop_L01b_processor.ld_library_path" : "$(trop_L01b_processor.directory)/lib:/opt/lib",
     #"trop_L01b_processor.malloc_check"    : "1", # enable to guard against double free or corruption (fasttop) in glibc
