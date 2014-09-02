@@ -53,11 +53,11 @@ update_ocalfw ()
 
     # Check out a working copy
     if [[ -d ocalfw ]] ; then
-        echo "[OCALFW] Pulling in updates ..."
+        echo "[update_ocalfw] Pulling in updates ..."
         cd ocalfw
         git svn rebase
     else
-        echo "[OCALFW] Checking out working copy ..."
+        echo "[update_ocalfw] Checking out working copy ..."
         git svn clone -s ${REPO_OCALFW} ocalfw
         cd ocalfw
     fi
@@ -68,12 +68,15 @@ update_ocalfw ()
     # Augment Python path
     export PYTHONPATH=/opt/local/EOS/nadc_extern/wheezy/lib/python2.7/site-packages:`pwd`
 
-    # Generate documentation
-    make doc_sphinx
+    echo "[update_ocalfw] Generating documentation pages ..."
+    make docs
+    echo "[update_ocalfw] Generating documentation pages - DONE"
 
     # Move documentation
+    echo "[update_ocalfw] Moving documentation to web forlder ..."
     rm -rf ${DIR_WWW_TROPOMI}/ocalfw
-    mv doc/_build/html ${DIR_WWW_TROPOMI}/ocalfw
+    mv -v doc/_build/html ${DIR_WWW_TROPOMI}/ocalfw
+    echo "[update_ocalfw] Moving documentation to web forlder - DONE"
 }
 
 ## ==========================================================================
