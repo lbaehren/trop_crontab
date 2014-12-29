@@ -1,0 +1,78 @@
+#!/bin//bash
+
+## === Variables ===============================================================
+
+varTargetDir="/home/larsb/public_html/tropomi/quicklooks"
+varSourceDirectories="/deos/larsb/tropomi/results/quicklooks"
+varCampaigns="occ post_env pre_env"
+varMeasurements="EWLS"
+varQuicklooks="quicklook_raw scanning_row"
+varOutfile="index.html"
+
+## === Functions ===============================================================
+
+##______________________________________________________________________________
+##                                                                   html_header
+##
+##
+##
+
+html_header ()
+{
+    echo "<html>"
+    echo "  <head>"
+    echo "    <meta name=\"author\" content=\"Lars Baehren\" />"
+    echo "    <meta name=\"description\" content=\"TROPOMI SWIR quicklooks\" />"
+    echo "    <meta name=\"keywords\" content=\"TROPOMI, SWIR, Quicklook, SRON\" />"
+    echo "    <meta name=\"generator\" content=\"Lars Baehren\" />"
+    echo "  <head>"
+    echo "  <body>"
+}
+
+##______________________________________________________________________________
+##                                                                   html_footer
+##
+##  Create HTML page footer
+##
+html_footer ()
+{
+    echo "  </body>"
+    echo "</body>"
+}
+
+##______________________________________________________________________________
+##                                                                     html_page
+##
+##  Create HTML page with list of available quicklooks
+##
+html_page ()
+{
+    html_header
+
+    for varCampaign in ${varCampaigns}
+    {
+        echo "    <h2>${varCampaign}</h2"
+
+        for varSourceDir in ${varSourceDirectories}
+        {
+
+            for varMeasurement in ${varMeasurements}
+            {
+                echo "    <h3>${varMeasurement}</h3"
+
+                echo "    <ol>"
+                for varQuicklook in ${varQuicklooks}
+                {
+                    echo "      <li>${varQuicklook}"
+                }
+                echo "    </ol>"
+            }
+        }
+    }
+
+    html_footer
+}
+
+## === Processing ==============================================================
+
+html_page > ${varSourceDirectories}${varOutfile}
