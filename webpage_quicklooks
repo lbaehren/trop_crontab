@@ -62,24 +62,26 @@ html_page ()
         for varSourceDir in ${varSourceDirectories}
         {
 
+            echo "    <ul>"
             for varMeasurement in ${varMeasurements}
             {
-                echo "    <h3>${varMeasurement}</h3>"
+                echo "    <li><strong>${varMeasurement}</strong>"
 
-                echo "    <ol>"
+                echo "    <ul>"
                 for varQuicklook in ${varQuicklooks}
                 {
                     echo "    <li>${varQuicklook}"
-                    echo "    <ul>"
+                    echo "    <ol>"
                     FILES=`cd ${varSourceDir}/${varCampaign} && ls | grep -i ${varMeasurement} | grep -i ${varQuicklook}`
                     for FILE in ${FILES}
                     {
                         echo "      <li><a href=\"${varCampaign}/${FILE}\">${FILE}</a>"
                     }
-                    echo "    </ul>"
+                    echo "    </ol>"
                 } ## end loop - varQuicklook
-                echo "    </ol>"
+                echo "    </ul>"
             }  ##  end loop - varMeasurement
+            echo "    </ul>"
         }
         echo "    <p><hr><p>"
     }  ##  end loop - varCampaign
@@ -91,3 +93,4 @@ html_page ()
 ## === Processing ==============================================================
 
 html_page > ${varTargetDir}/${varOutfile}
+
