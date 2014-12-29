@@ -4,8 +4,8 @@
 
 varTargetDir="/home/larsb/public_html/tropomi/quicklooks"
 varSourceDirectories="/deos/larsb/tropomi/results/quicklooks"
-varCampaigns="occ post_env pre_env"
-varMeasurements="EWLS"
+varCampaigns="occ post_env"
+varMeasurements="EWLS MONA MONB"
 varQuicklooks="quicklook_raw scanning_row"
 varOutfile="index.html"
 
@@ -27,6 +27,11 @@ html_header ()
     echo "    <meta name=\"generator\" content=\"Lars Baehren\" />"
     echo "  <head>"
     echo "  <body>"
+    echo ""
+    echo "    <h1>TROPOMI SWIR quicklooks</h1>"
+    echo ""
+    echo "    <i>Page generated `date`</i>"
+    echo ""
 }
 
 ##______________________________________________________________________________
@@ -47,6 +52,7 @@ html_footer ()
 ##
 html_page ()
 {
+    # Create HTML page header
     html_header
 
     for varCampaign in ${varCampaigns}
@@ -63,16 +69,24 @@ html_page ()
                 echo "    <ol>"
                 for varQuicklook in ${varQuicklooks}
                 {
-                    echo "      <li>${varQuicklook}"
+                    echo "    <li>${varQuicklook}"
+                    echo "    <ul>"
+                    FILES=`cd ${varSourceDir}/${varCampaign} && ls | grep -i ${varMeasurement} | grep -i ${varQuicklook}`
+                    for FILE in ${FILES}
+                    {
+                        echo "      <li><a href=\"${varCampaign}/${FILE}\">${FILE}</a>"
+                    }
+                    echo "    </ul>"
                 }
                 echo "    </ol>"
             }
         }
     }
 
+    # Create HTML page footer
     html_footer
 }
 
 ## === Processing ==============================================================
 
-html_page > ${varSourceDirectories}${varOutfile}
+html_page > ${varTargetDir}/${varOutfile}
