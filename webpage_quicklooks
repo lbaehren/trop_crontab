@@ -57,14 +57,14 @@ html_page ()
 
     for varCampaign in ${varCampaigns}
     {
-        echo "    <h2>${varCampaign}</h2"
+        echo "    <h2>${varCampaign}</h2>"
 
         for varSourceDir in ${varSourceDirectories}
         {
 
             for varMeasurement in ${varMeasurements}
             {
-                echo "    <h3>${varMeasurement}</h3"
+                echo "    <h3>${varMeasurement}</h3>"
 
                 echo "    <ol>"
                 for varQuicklook in ${varQuicklooks}
@@ -77,11 +77,12 @@ html_page ()
                         echo "      <li><a href=\"${varCampaign}/${FILE}\">${FILE}</a>"
                     }
                     echo "    </ul>"
-                }
+                } ## end loop - varQuicklook
                 echo "    </ol>"
-            }
+            }  ##  end loop - varMeasurement
         }
-    }
+        echo "    <p><hr><p>"
+    }  ##  end loop - varCampaign
 
     # Create HTML page footer
     html_footer
