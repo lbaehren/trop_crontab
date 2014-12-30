@@ -5,7 +5,7 @@
 varTargetDir="/home/larsb/public_html/tropomi/quicklooks"
 varSourceDirectories="/deos/larsb/tropomi/results/quicklooks"
 varCampaigns="occ post_env"
-varMeasurements="DPQF EWLS MONA MONB"
+varMeasurements="DPQF DrkDpqf EWLS MONA MONB"
 varQuicklooks="quicklook_raw quicklook_detector quicklook_scan"
 varOutfile="index.html"
 
