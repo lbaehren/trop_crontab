@@ -8,8 +8,182 @@ varCampaigns="occ post_env"
 varMeasurements="DPQF DrkDpqf EWLS MONA MONB"
 varQuicklooks="quicklook_raw quicklook_detector quicklook_scan"
 varOutfile="index.html"
+varTmpDir=`pwd`/doxygen_src
+varPageTitle="TROPOMI SWIR quicklooks"
 
 ## === Functions ===============================================================
+
+campaign_name ()
+{
+    case $1 in
+        "occ")
+            echo "On-Ground calibration (occ)"
+        ;;
+        "post_env")
+            echo "Post-environemtal calibration (post_env)"
+        ;;
+    esac
+}
+
+##______________________________________________________________________________
+##                                                                doxygen_config
+##
+## Configuration settings for runnning Doxygen
+
+doxygen_config ()
+{
+    echo "#---------------------------------------------------------------------------"
+    echo "# Project settings"
+    echo "#---------------------------------------------------------------------------"
+    echo "DOXYFILE_ENCODING      = UTF-8"
+    echo "PROJECT_NAME           = \"${varPageTitle}\""
+    echo "FULL_PATH_NAMES        = NO"
+    echo "MARKDOWN_SUPPORT       = YES"
+    echo "SHOW_NAMESPACES        = NO"
+    echo "#---------------------------------------------------------------------------"
+    echo "# Input settings"
+    echo "#---------------------------------------------------------------------------"
+    echo "INPUT                  = ${varTmpDir}"
+    echo "RECURSIVE              = YES"
+    echo "IMAGE_PATH             = ${varSourceDirectories}"
+    echo "#---------------------------------------------------------------------------"
+    echo "# Configuration options related to output"
+    echo "#---------------------------------------------------------------------------"
+    echo "GENERATE_HTML          = YES"
+    echo "GENERATE_LATEX         = NO"
+    echo "GENERATE_XML           = NO"
+    echo "GENERATE_RTF           = NO"
+}
+
+##______________________________________________________________________________
+##                                                                     md_header
+
+md_header ()
+{
+    varTitle=$1
+    varAnchor=$2
+    varTitleLength=`echo ${varTitle} | wc -c`
+    ((varTitleLength--))
+    s=$(printf "%-${varTitleLength}s" "=")
+    varUnderscore=`echo "${s// /=}"`
+
+    echo "${varTitle}  {#${varAnchor}}"
+    echo "${varUnderscore}"
+    echo ""
+}
+
+##______________________________________________________________________________
+##                                                              md_page_campaign
+
+md_page_campaign ()
+{
+    varCampaign=$1
+
+    md_header ${varCampaign} ${varCampaign}
+
+    echo ""
+    for varMeasurement in ${varMeasurements}
+    {
+        varAnchor=`echo ${varCampaign}_${varMeasurement} | tr "[A-Z]" "[a-z]"`
+        echo " - \subpage ${varAnchor}"
+
+        for varQuicklook in ${varQuicklooks}
+        {
+            varAnchor=`echo ${varCampaign}_${varMeasurement}_${varQuicklook} | tr "[A-Z]" "[a-z]"`
+            echo "   - \ref ${varAnchor}"
+        }
+    }
+    echo ""
+}
+
+##______________________________________________________________________________
+##                                                           md_page_measurement
+
+md_page_measurement ()
+{
+    varCampaign=$1
+    varMeasurement=$2
+    varAnchor=`echo ${varCampaign}_${varMeasurement} | tr "[A-Z]" "[a-z]"`
+
+    md_header ${varMeasurement} ${varAnchor}
+
+    for varQuicklook in ${varQuicklooks}
+    {
+        varAnchor=`echo ${varCampaign}_${varMeasurement}_${varQuicklook} | tr "[A-Z]" "[a-z]"`
+        echo " - \subpage ${varAnchor}"
+    }
+}
+
+##______________________________________________________________________________
+##                                                             md_page_quicklook
+
+md_page_quicklook ()
+{
+    varCampaign=$1
+    varMeasurement=$2
+    varQuicklook=$3
+    varAnchor=`echo ${varCampaign}_${varMeasurement}_${varQuicklook} | tr "[A-Z]" "[a-z]"`
+
+    md_header ${varQuicklook} ${varAnchor}
+
+    ## === List of quicklooks
+
+    FILES=`cd ${varSourceDir}/${varCampaign} && ls | grep -i ${varMeasurement} | grep -i ${varQuicklook}`
+    for FILE in ${FILES}
+    {
+        echo "  - [${FILE}](${FILE})"
+    }
+
+}
+
+##______________________________________________________________________________
+##                                                                      md_pages
+
+md_pages ()
+{
+    # Create source directory
+    mkdir -p ${varTmpDir}
+
+    # Create configuration file for Doxygen
+    doxygen_config > ${varTmpDir}/doxygen.config
+
+    # Header for main page
+    echo "${varPageTitle}  {#mainpage}"  > ${varTmpDir}/index.md
+    echo "==============="              >> ${varTmpDir}/index.md
+
+    for varCampaign in ${varCampaigns}
+    {
+        ## === Entries to main page =======================
+        echo ""                           >> ${varTmpDir}/index.md
+        echo "`campaign_name ${varCampaign}`"             >> ${varTmpDir}/index.md
+        echo "----"                       >> ${varTmpDir}/index.md
+        echo ""                           >> ${varTmpDir}/index.md
+        echo " - \subpage ${varCampaign}" >> ${varTmpDir}/index.md
+
+        ## === Create subpage for campaign ================
+        varPage=`echo ${varTmpDir}/${varCampaign}.md | tr "[A-Z]" "[a-z]"`
+        md_page_campaign ${varCampaign} > ${varPage}
+
+        for varMeasurement in ${varMeasurements}
+        {
+            ## === Entries to main page ===================
+            varAnchor=`echo ${varCampaign}_${varMeasurement} | tr "[A-Z]" "[a-z]"`
+            echo "   - \ref ${varAnchor}" >> ${varTmpDir}/index.md
+
+            varPage=`echo ${varTmpDir}/${varCampaign}_${varMeasurement}.md | tr "[A-Z]" "[a-z]"`
+            md_page_measurement ${varCampaign} ${varMeasurement} > ${varPage}
+
+            for varQuicklook in ${varQuicklooks}
+            {
+                varPage=`echo ${varTmpDir}/${varCampaign}_${varMeasurement}_${varQuicklook}.md | tr "[A-Z]" "[a-z]"`
+                md_page_quicklook ${varCampaign} ${varMeasurement} ${varQuicklook} > ${varPage}
+            }
+        }
+    }
+
+    # Run doxygen to generate HTML output
+    doxygen ${varTmpDir}/doxygen.config
+}
 
 ##______________________________________________________________________________
 ##                                                                   html_header
@@ -21,6 +195,7 @@ html_header ()
 {
     echo "<html>"
     echo "  <head>"
+    echo "    <title>${varPageTitle}</title>"
     echo "    <meta name=\"author\" content=\"Lars Baehren\" />"
     echo "    <meta name=\"description\" content=\"TROPOMI SWIR quicklooks\" />"
     echo "    <meta name=\"keywords\" content=\"TROPOMI, SWIR, Quicklook, SRON\" />"
@@ -28,7 +203,7 @@ html_header ()
     echo "  <head>"
     echo "  <body>"
     echo ""
-    echo "    <h1>TROPOMI SWIR quicklooks</h1>"
+    echo "    <h1>${varPageTitle}</h1>"
     echo ""
     echo "    <i>Page generated `date`</i>"
     echo ""
@@ -93,3 +268,5 @@ html_page ()
 ## === Processing ==============================================================
 
 html_page > ${varTargetDir}/${varOutfile}
+
+md_pages
