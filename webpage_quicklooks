@@ -5,7 +5,7 @@
 varTargetDir="/home/larsb/public_html/tropomi/quicklooks"
 varSourceDirectories="/deos/larsb/tropomi/results/quicklooks"
 varCampaigns="occ post_env"
-varMeasurements="DPQF DrkDpqf EWLS MONA MONB"
+varMeasurements="CheckExposureTime DPQF DrkDpqf EWLS filter_earth_stray MONA MONB"
 varQuicklooks="quicklook_raw quicklook_detector quicklook_scan"
 varOutfile="index.html"
 varTmpDir=`pwd`/doxygen_src
@@ -46,6 +46,7 @@ doxygen_config ()
     echo "INPUT                  = ${varTmpDir}"
     echo "RECURSIVE              = YES"
     echo "IMAGE_PATH             = ${varSourceDirectories}"
+    echo "HTML_OUTPUT            = ${varTargetDir}"
     echo "#---------------------------------------------------------------------------"
     echo "# Configuration options related to output"
     echo "#---------------------------------------------------------------------------"
@@ -128,10 +129,12 @@ md_page_quicklook ()
 
     ## === List of quicklooks
 
-    FILES=`cd ${varSourceDir}/${varCampaign} && ls | grep -i ${varMeasurement} | grep -i ${varQuicklook}`
+    FILES=`find ${varSourceDirectories} -name *.pdf | grep -i ${varCampaign} | grep -i ${varMeasurement} | grep -i ${varQuicklook} | sort`
     for FILE in ${FILES}
     {
-        echo "  - [${FILE}](${FILE})"
+        varFilename=`echo ${FILE} | sed s#${varSourceDirectories}/${varCampaign}/## | sed s#.detector4.pdf##`
+        varLink=`echo ${FILE} | sed s#${varSourceDirectories}/##`
+        echo "  - [${varFilename}](${varLink})"
     }
 
 }
@@ -154,14 +157,14 @@ md_pages ()
     for varCampaign in ${varCampaigns}
     {
         ## === Entries to main page =======================
-        echo ""                           >> ${varTmpDir}/index.md
-        echo "`campaign_name ${varCampaign}`"             >> ${varTmpDir}/index.md
-        echo "----"                       >> ${varTmpDir}/index.md
-        echo ""                           >> ${varTmpDir}/index.md
-        echo " - \subpage ${varCampaign}" >> ${varTmpDir}/index.md
+        echo ""                               >> ${varTmpDir}/index.md
+        echo "`campaign_name ${varCampaign}`" >> ${varTmpDir}/index.md
+        echo "----"                           >> ${varTmpDir}/index.md
+        echo ""                               >> ${varTmpDir}/index.md
+        echo " - \subpage ${varCampaign}"     >> ${varTmpDir}/index.md
 
         ## === Create subpage for campaign ================
-        varPage=`echo ${varTmpDir}/${varCampaign}.md | tr "[A-Z]" "[a-z]"`
+        varPage=${varTmpDir}/`echo ${varCampaign}.md | tr "[A-Z]" "[a-z]"`
         md_page_campaign ${varCampaign} > ${varPage}
 
         for varMeasurement in ${varMeasurements}
@@ -170,12 +173,12 @@ md_pages ()
             varAnchor=`echo ${varCampaign}_${varMeasurement} | tr "[A-Z]" "[a-z]"`
             echo "   - \ref ${varAnchor}" >> ${varTmpDir}/index.md
 
-            varPage=`echo ${varTmpDir}/${varCampaign}_${varMeasurement}.md | tr "[A-Z]" "[a-z]"`
+            varPage=${varTmpDir}/`echo ${varCampaign}_${varMeasurement}.md | tr "[A-Z]" "[a-z]"`
             md_page_measurement ${varCampaign} ${varMeasurement} > ${varPage}
 
             for varQuicklook in ${varQuicklooks}
             {
-                varPage=`echo ${varTmpDir}/${varCampaign}_${varMeasurement}_${varQuicklook}.md | tr "[A-Z]" "[a-z]"`
+                varPage=${varTmpDir}/`echo ${varCampaign}_${varMeasurement}_${varQuicklook}.md | tr "[A-Z]" "[a-z]"`
                 md_page_quicklook ${varCampaign} ${varMeasurement} ${varQuicklook} > ${varPage}
             }
         }
@@ -183,6 +186,8 @@ md_pages ()
 
     # Run doxygen to generate HTML output
     doxygen ${varTmpDir}/doxygen.config
+    # Remove temporary directory
+    rm -rf ${varTmpDir}
 }
 
 ##______________________________________________________________________________
@@ -267,6 +272,6 @@ html_page ()
 
 ## === Processing ==============================================================
 
-html_page > ${varTargetDir}/${varOutfile}
+#html_page > ${varTargetDir}/${varOutfile}
 
 md_pages
