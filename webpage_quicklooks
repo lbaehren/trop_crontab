@@ -2,14 +2,17 @@
 
 ## === Variables ===============================================================
 
+varBasedir=`pwd`
 varTargetDir="/home/larsb/public_html/tropomi/quicklooks"
 varSourceDirectories="/deos/larsb/tropomi/results/quicklooks"
 varCampaigns="occ post_env"
 varMeasurements="CheckExposureTime DPQF DrkDpqf EWLS filter_earth_stray MONA MONB"
 varQuicklooks="quicklook_raw quicklook_detector quicklook_scan"
 varOutfile="index.html"
-varTmpDir=`pwd`/doxygen_src
+varTmpDir=${varBasedir}/doxygen_src
 varPageTitle="TROPOMI SWIR quicklooks"
+
+binDoxygen=/data/larsb/sw/bin/doxygen
 
 ## === Functions ===============================================================
 
@@ -23,6 +26,17 @@ campaign_name ()
             echo "Post-environemtal calibration (post_env)"
         ;;
     esac
+}
+
+##______________________________________________________________________________
+##                                                                     sync_data
+##
+##  Synchronize (import) data from IDAF to SRON.
+
+sync_data ()
+{
+    cd /data/larsb/tropomi
+    make sync_quicklooks
 }
 
 ##______________________________________________________________________________
@@ -185,7 +199,7 @@ md_pages ()
     }
 
     # Run doxygen to generate HTML output
-    doxygen ${varTmpDir}/doxygen.config
+    ${binDoxygen} ${varTmpDir}/doxygen.config
     # Remove temporary directory
     rm -rf ${varTmpDir}
 }
@@ -272,6 +286,7 @@ html_page ()
 
 ## === Processing ==============================================================
 
-#html_page > ${varTargetDir}/${varOutfile}
+sync_data
 
+cd ${varBasedir}
 md_pages
