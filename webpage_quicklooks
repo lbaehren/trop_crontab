@@ -159,7 +159,17 @@ md_page_quicklook ()
         # extract number of PDF pages
         varPages=`pdfinfo ${FILE} | grep Pages | tr ":" "\n" | grep -v Pages | sed 's/^[ \t]*//'`
         # write output to page
-        echo "  - [${varFilename}](${varLink})  (${varPages} pages)"
+        case ${varPages} in
+            "")
+                echo " -> Corrupt file ${FILE}."
+            ;;
+            "0")
+                echo "  - ${varFilename} (${varPages} pages)"
+            ;;
+            *)
+                echo "  - [${varFilename}](${varLink})  (${varPages} pages)"
+            ;;
+        esac
     }
 
 }
