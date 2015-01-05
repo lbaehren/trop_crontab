@@ -16,8 +16,8 @@ binDoxygen=/data/larsb/sw/bin/doxygen
 
 ## === Functions ===============================================================
 
-##______________________________________________________________________________
-##                                                                 campaign_name
+#_______________________________________________________________________________
+#                                                                  campaign_name
 
 ##  Get the full name/descripion of the measurement campaign.
 #
@@ -36,6 +36,37 @@ campaign_name ()
             echo "Pre-environmental calibration (pre_env)"
         ;;
     esac
+}
+
+#_______________________________________________________________________________
+#                                                                 find_nof_files
+
+find_nof_files ()
+{
+    varCampaign=$1
+
+    if [ -z $2 ] ; then
+        # === no measurement type defined =================
+        if [ -z $3 ] ; then
+            varQuicklook=""
+            FILES=`find ${varSourceDirectories} -name *.pdf | grep -i ${varCampaign} | sort`
+        else
+            varQuicklook=$3
+            FILES=`find ${varSourceDirectories} -name *.pdf | grep -i ${varCampaign} | grep -i ${varQuicklook} | sort`
+        fi
+    else
+        # === measurement type defined ====================
+        varMeasurement=$2
+        if [ -z $3 ] ; then
+            FILES=`find ${varSourceDirectories} -name *.pdf | grep -i ${varCampaign} | grep -i ${varMeasurement} | sort`
+        else
+            varQuicklook=$3
+            FILES=`find ${varSourceDirectories} -name *.pdf | grep -i ${varCampaign} | grep -i ${varMeasurement} | grep -i ${varQuicklook} | sort`
+        fi
+    fi
+
+    # display the number of files matching the above filter(s)
+    echo $FILES  | wc -l  | sed 's/^[ \t]*//'
 }
 
 ##______________________________________________________________________________
@@ -80,9 +111,13 @@ doxygen_config ()
     echo "GENERATE_RTF           = NO"
 }
 
-##______________________________________________________________________________
-##                                                                     md_header
+#_______________________________________________________________________________
+#                                                                      md_header
 
+## Create header for a new page.
+#
+#  @param title  Title of the page.
+#  @param anchor Anchor used for linking to the page.
 md_header ()
 {
     varTitle=$1
@@ -135,7 +170,8 @@ md_page_measurement ()
     for varQuicklook in ${varQuicklooks}
     {
         varAnchor=`echo ${varCampaign}_${varMeasurement}_${varQuicklook} | tr "[A-Z]" "[a-z]"`
-        echo " - \subpage ${varAnchor}"
+        nofQuicklooks=`find_nof_files $1 $2 ${varQuicklook}`
+        echo " - \subpage ${varAnchor}  (${nofQuicklooks})"
     }
 }
 
