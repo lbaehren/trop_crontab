@@ -16,6 +16,11 @@ binDoxygen=/data/larsb/sw/bin/doxygen
 
 ## === Functions ===============================================================
 
+##______________________________________________________________________________
+##                                                                 campaign_name
+##
+##  Get the full name/descripion of the measurement campaign.
+
 campaign_name ()
 {
     case $1 in
@@ -24,6 +29,9 @@ campaign_name ()
         ;;
         "post_env")
             echo "Post-environemtal calibration (post_env)"
+        ;;
+        "pre_env")
+            echo "Pre-environemtal calibration (pre_env)"
         ;;
     esac
 }
