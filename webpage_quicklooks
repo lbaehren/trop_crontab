@@ -201,6 +201,8 @@ md_page_quicklook ()
         case ${varPages} in
             "")
                 echo "  -# ${varFilename} (file corrupted)"
+                # Remove file to save disk space
+                rm `find ${varTargetDir} -name "*${varFilename}*"`
             ;;
             "0")
                 echo "  -# ${varFilename} (${varPages} pages)"
@@ -258,6 +260,12 @@ md_pages ()
             }
         }
     }
+
+    # Keep track of disk-space used
+    echo ""               >> ${varTmpDir}/index.md
+    echo "\code"          >> ${varTmpDir}/index.md
+    du -h ${varTargetDir} >> ${varTmpDir}/index.md
+    echo "\endcode"       >> ${varTmpDir}/index.md
 
     # Run doxygen to generate HTML output
     ${binDoxygen} ${varTmpDir}/doxygen.config
