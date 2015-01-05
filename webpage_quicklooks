@@ -200,7 +200,7 @@ md_page_quicklook ()
         # write output to page
         case ${varPages} in
             "")
-                echo " -> Corrupt file ${FILE}."
+                echo "  -# ${varFilename} (file corrupted)"
             ;;
             "0")
                 echo "  -# ${varFilename} (${varPages} pages)"
