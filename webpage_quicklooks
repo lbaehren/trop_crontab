@@ -66,7 +66,7 @@ find_nof_files ()
     fi
 
     # display the number of files matching the above filter(s)
-    echo $FILES  | wc -l  | sed 's/^[ \t]*//'
+    echo $FILES  | wc -w  | sed 's/^[ \t]*//'
 }
 
 ##______________________________________________________________________________
@@ -150,7 +150,8 @@ md_page_campaign ()
         for varQuicklook in ${varQuicklooks}
         {
             varAnchor=`echo ${varCampaign}_${varMeasurement}_${varQuicklook} | tr "[A-Z]" "[a-z]"`
-            echo "   - \ref ${varAnchor}"
+            nofQuicklooks=`find_nof_files ${varCampaign} ${varMeasurement} ${varQuicklook}`
+            echo "   - \ref ${varAnchor}  (${nofQuicklooks} files)"
         }
     }
     echo ""
@@ -171,7 +172,7 @@ md_page_measurement ()
     {
         varAnchor=`echo ${varCampaign}_${varMeasurement}_${varQuicklook} | tr "[A-Z]" "[a-z]"`
         nofQuicklooks=`find_nof_files $1 $2 ${varQuicklook}`
-        echo " - \subpage ${varAnchor}  (${nofQuicklooks})"
+        echo " - \subpage ${varAnchor}  (${nofQuicklooks} files)"
     }
 }
 
@@ -202,10 +203,10 @@ md_page_quicklook ()
                 echo " -> Corrupt file ${FILE}."
             ;;
             "0")
-                echo "  - ${varFilename} (${varPages} pages)"
+                echo "  -# ${varFilename} (${varPages} pages)"
             ;;
             *)
-                echo "  - [${varFilename}](${varLink})  (${varPages} pages)"
+                echo "  -# [${varFilename}](${varLink})  (${varPages} pages)"
             ;;
         esac
     }
@@ -244,7 +245,8 @@ md_pages ()
         {
             ## === Entries to main page ===================
             varAnchor=`echo ${varCampaign}_${varMeasurement} | tr "[A-Z]" "[a-z]"`
-            echo "   - \ref ${varAnchor}" >> ${varTmpDir}/index.md
+            nofMeasurements=`find_nof_files ${varCampaign} ${varMeasurement}`
+            echo "   - \ref ${varAnchor}  (${nofMeasurements} files)" >> ${varTmpDir}/index.md
 
             varPage=${varTmpDir}/`echo ${varCampaign}_${varMeasurement}.md | tr "[A-Z]" "[a-z]"`
             md_page_measurement ${varCampaign} ${varMeasurement} > ${varPage}
