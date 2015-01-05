@@ -148,7 +148,10 @@ md_page_quicklook ()
     {
         varFilename=`echo ${FILE} | sed s#${varSourceDirectories}/${varCampaign}/## | sed s#.detector4.pdf##`
         varLink=`echo ${FILE} | sed s#${varSourceDirectories}/##`
-        echo "  - [${varFilename}](${varLink})"
+        # extract number of PDF pages
+        varPages=`pdfinfo ${FILE} | grep Pages | tr ":" "\n" | grep -v Pages | sed 's/^[ \t]*//'`
+        # write output to page
+        echo "  - [${varFilename}](${varLink})  (${varPages} pages)"
     }
 
 }
