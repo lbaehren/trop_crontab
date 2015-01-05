@@ -18,9 +18,11 @@ binDoxygen=/data/larsb/sw/bin/doxygen
 
 ##______________________________________________________________________________
 ##                                                                 campaign_name
-##
-##  Get the full name/descripion of the measurement campaign.
 
+##  Get the full name/descripion of the measurement campaign.
+#
+#  @param name Abbreviation for the measurement campaign.
+#  @return description Full name for the measurement campaign.
 campaign_name ()
 {
     case $1 in
@@ -28,10 +30,10 @@ campaign_name ()
             echo "On-Ground calibration (occ)"
         ;;
         "post_env")
-            echo "Post-environemtal calibration (post_env)"
+            echo "Post-environmental calibration (post_env)"
         ;;
         "pre_env")
-            echo "Pre-environemtal calibration (pre_env)"
+            echo "Pre-environmental calibration (pre_env)"
         ;;
     esac
 }
