@@ -3,13 +3,13 @@
 ## === Variables ===============================================================
 
 varBasedir=`pwd`
+varTmpDir=${varBasedir}/doxygen_src
 varTargetDir="/home/larsb/public_html/tropomi/quicklooks"
 varSourceDirectories="/deos/larsb/tropomi/results/quicklooks"
 varCampaigns="occ post_env"
 varMeasurements="CheckExposureTime DPQF DrkDpqf EWLS filter_earth_stray MONA MONB"
 varQuicklooks="quicklook_raw quicklook_detector quicklook_scan"
 varOutfile="index.html"
-varTmpDir=${varBasedir}/doxygen_src
 varPageTitle="TROPOMI SWIR quicklooks"
 
 binDoxygen=/data/larsb/sw/bin/doxygen
@@ -205,86 +205,6 @@ md_pages ()
     ${binDoxygen} ${varTmpDir}/doxygen.config
     # Remove temporary directory
     rm -rf ${varTmpDir}
-}
-
-##______________________________________________________________________________
-##                                                                   html_header
-##
-##
-##
-
-html_header ()
-{
-    echo "<html>"
-    echo "  <head>"
-    echo "    <title>${varPageTitle}</title>"
-    echo "    <meta name=\"author\" content=\"Lars Baehren\" />"
-    echo "    <meta name=\"description\" content=\"TROPOMI SWIR quicklooks\" />"
-    echo "    <meta name=\"keywords\" content=\"TROPOMI, SWIR, Quicklook, SRON\" />"
-    echo "    <meta name=\"generator\" content=\"Lars Baehren\" />"
-    echo "  <head>"
-    echo "  <body>"
-    echo ""
-    echo "    <h1>${varPageTitle}</h1>"
-    echo ""
-    echo "    <i>Page generated `date`</i>"
-    echo ""
-}
-
-##______________________________________________________________________________
-##                                                                   html_footer
-##
-##  Create HTML page footer
-##
-html_footer ()
-{
-    echo "  </body>"
-    echo "</body>"
-}
-
-##______________________________________________________________________________
-##                                                                     html_page
-##
-##  Create HTML page with list of available quicklooks
-##
-html_page ()
-{
-    # Create HTML page header
-    html_header
-
-    for varCampaign in ${varCampaigns}
-    {
-        echo "    <h2>${varCampaign}</h2>"
-
-        for varSourceDir in ${varSourceDirectories}
-        {
-
-            echo "    <ul>"
-            for varMeasurement in ${varMeasurements}
-            {
-                echo "    <li><strong>${varMeasurement}</strong>"
-
-                echo "    <ul>"
-                for varQuicklook in ${varQuicklooks}
-                {
-                    echo "    <li>${varQuicklook}"
-                    echo "    <ol>"
-                    FILES=`cd ${varSourceDir}/${varCampaign} && ls | grep -i ${varMeasurement} | grep -i ${varQuicklook}`
-                    for FILE in ${FILES}
-                    {
-                        echo "      <li><a href=\"${varCampaign}/${FILE}\">${FILE}</a>"
-                    }
-                    echo "    </ol>"
-                } ## end loop - varQuicklook
-                echo "    </ul>"
-            }  ##  end loop - varMeasurement
-            echo "    </ul>"
-        }
-        echo "    <p><hr><p>"
-    }  ##  end loop - varCampaign
-
-    # Create HTML page footer
-    html_footer
 }
 
 ## === Processing ==============================================================
