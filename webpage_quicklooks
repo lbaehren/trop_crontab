@@ -274,8 +274,11 @@ md_pages ()
 
                 for varQuicklook in ${varQuicklooks}
                 {
-                    varPage=${varTmpDir}/`echo ${varCampaign}_${varMeasurement}_${varQuicklook}.md | tr "[A-Z]" "[a-z]"`
-                    md_page_quicklook ${varCampaign} ${varMeasurement} ${varQuicklook} > ${varPage}
+                    nofQuicklooks=`find_nof_files ${varCampaign} ${varMeasurement} ${varQuicklook}`
+                    if [[ ${nofQuicklooks} -ne 0 ]] ; then
+                        varPage=${varTmpDir}/`echo ${varCampaign}_${varMeasurement}_${varQuicklook}.md | tr "[A-Z]" "[a-z]"`
+                        md_page_quicklook ${varCampaign} ${varMeasurement} ${varQuicklook} > ${varPage}
+                    fi
                 }
             fi
         }
