@@ -144,17 +144,23 @@ md_page_campaign ()
     echo ""
     for varMeasurement in ${varMeasurements}
     {
-        varAnchor=`echo ${varCampaign}_${varMeasurement} | tr "[A-Z]" "[a-z]"`
-        echo " - \subpage ${varAnchor}"
+        nofMeasurements=`find_nof_files ${varCampaign} ${varMeasurement}`
 
-        for varQuicklook in ${varQuicklooks}
-        {
-            varAnchor=`echo ${varCampaign}_${varMeasurement}_${varQuicklook} | tr "[A-Z]" "[a-z]"`
-            nofQuicklooks=`find_nof_files ${varCampaign} ${varMeasurement} ${varQuicklook}`
-            # only create link if there is some contents to link to
-            if [[ ${nofQuicklooks} -ne 0 ]] ; then
-                echo "   - \ref ${varAnchor}  (${nofQuicklooks} files)"
-            fi
+        if [[ ${nofMeasurements} -ne 0 ]] ; then
+            varAnchor=`echo ${varCampaign}_${varMeasurement} | tr "[A-Z]" "[a-z]"`
+            echo " - \subpage ${varAnchor}"
+
+            for varQuicklook in ${varQuicklooks}
+            {
+                nofQuicklooks=`find_nof_files ${varCampaign} ${varMeasurement} ${varQuicklook}`
+                # only create link if there is some contents to link to
+                if [[ ${nofQuicklooks} -ne 0 ]] ; then
+                    # create anchor to sub-page
+                    varAnchor=`echo ${varCampaign}_${varMeasurement}_${varQuicklook} | tr "[A-Z]" "[a-z]"`
+                    # create link to sub-page
+                    echo "   - \ref ${varAnchor}  (${nofQuicklooks} files)"
+                fi
+            }
         }
     }
     echo ""
@@ -173,10 +179,10 @@ md_page_measurement ()
 
     for varQuicklook in ${varQuicklooks}
     {
-        varAnchor=`echo ${varCampaign}_${varMeasurement}_${varQuicklook} | tr "[A-Z]" "[a-z]"`
         nofQuicklooks=`find_nof_files $1 $2 ${varQuicklook}`
         # only create link if there is some contents to link to
         if [[ ${nofQuicklooks} -ne 0 ]] ; then
+            varAnchor=`echo ${varCampaign}_${varMeasurement}_${varQuicklook} | tr "[A-Z]" "[a-z]"`
             echo " - \subpage ${varAnchor}  (${nofQuicklooks} files)"
         fi
     }
@@ -252,10 +258,12 @@ md_pages ()
         for varMeasurement in ${varMeasurements}
         {
             ## === Entries to main page ===================
-            varAnchor=`echo ${varCampaign}_${varMeasurement} | tr "[A-Z]" "[a-z]"`
+
             nofMeasurements=`find_nof_files ${varCampaign} ${varMeasurement}`
             # only create link and subpages if there is some contents to link to
             if [[ ${nofMeasurements} -ne 0 ]] ; then
+                # create anchor for page
+                varAnchor=`echo ${varCampaign}_${varMeasurement} | tr "[A-Z]" "[a-z]"`
                 # link on main page
                 echo "   - \ref ${varAnchor}  (${nofMeasurements} files)" >> ${varTmpDir}/index.md
                 # sub-page for the type of measurement
