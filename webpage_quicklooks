@@ -254,7 +254,10 @@ md_pages ()
             ## === Entries to main page ===================
             varAnchor=`echo ${varCampaign}_${varMeasurement} | tr "[A-Z]" "[a-z]"`
             nofMeasurements=`find_nof_files ${varCampaign} ${varMeasurement}`
-            echo "   - \ref ${varAnchor}  (${nofMeasurements} files)" >> ${varTmpDir}/index.md
+            # only create link if there is some contents to link to
+            if [[ ${nofMeasurements} -ne 0 ]] ; then
+                echo "   - \ref ${varAnchor}  (${nofMeasurements} files)" >> ${varTmpDir}/index.md
+            fi
 
             varPage=${varTmpDir}/`echo ${varCampaign}_${varMeasurement}.md | tr "[A-Z]" "[a-z]"`
             md_page_measurement ${varCampaign} ${varMeasurement} > ${varPage}
@@ -268,13 +271,13 @@ md_pages ()
     }
 
     # Keep track of disk-space used
-    echo ""                      >> ${varTmpDir}/index.md
-    echo ""                      >> ${varTmpDir}/index.md
-    echo "----"                  >> ${varTmpDir}/index.md
-    echo "**Disk uage summary**" >> ${varTmpDir}/index.md
-    echo "\code"                 >> ${varTmpDir}/index.md
+    echo ""                       >> ${varTmpDir}/index.md
+    echo ""                       >> ${varTmpDir}/index.md
+    echo "----"                   >> ${varTmpDir}/index.md
+    echo "**Disk usage summary**" >> ${varTmpDir}/index.md
+    echo "\code"                  >> ${varTmpDir}/index.md
     du -h ${varTargetDir} | sed s#/home/## >> ${varTmpDir}/index.md
-    echo "\endcode"              >> ${varTmpDir}/index.md
+    echo "\endcode"               >> ${varTmpDir}/index.md
 
     # Run doxygen to generate HTML output
     ${binDoxygen} ${varTmpDir}/doxygen.config
