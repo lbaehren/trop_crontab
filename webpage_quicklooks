@@ -7,8 +7,8 @@ varTmpDir=${varBasedir}/doxygen_src
 varTargetDir="/home/larsb/public_html/tropomi/quicklooks"
 varSourceDirectories="/deos/larsb/tropomi/results/quicklooks"
 varCampaigns="occ post_env"
-varMeasurements="CheckExposureTime DPQF DrkDpqf DryRun EWLS filter_earth_stray LASER MONA MONB"
-varQuicklooks="quicklook_raw quicklook_detector quicklook_scan"
+varMeasurements="CheckExposureTime DPQF DrkDpqf DryRun EWLS Filter Laser MONA MONB Stray"
+varQuicklooks="quicklook_raw quicklook_raw_detector quicklook_eps quicklook_eps_detector quicklook_detector quicklook_scan"
 varOutfile="index.html"
 varPageTitle="TROPOMI SWIR quicklooks"
 
@@ -190,7 +190,7 @@ md_page_quicklook ()
 
     ## === List of quicklooks
 
-    FILES=`find ${varSourceDirectories} -name *.pdf | grep -i ${varCampaign} | grep -i ${varMeasurement} | grep -i ${varQuicklook} | sort`
+    FILES=`find ${varSourceDirectories} -name *.pdf | grep -i ${varCampaign} | grep -i ${varMeasurement} | grep -i ${varQuicklook} | sort -r`
     for FILE in ${FILES}
     {
         varFilename=`echo ${FILE} | sed s#${varSourceDirectories}/${varCampaign}/## | sed s#.detector4.pdf##`
@@ -262,6 +262,9 @@ md_pages ()
     }
 
     # Keep track of disk-space used
+    echo ""               >> ${varTmpDir}/index.md
+    echo ""               >> ${varTmpDir}/index.md
+    echo "----"           >> ${varTmpDir}/index.md
     echo ""               >> ${varTmpDir}/index.md
     echo "\code"          >> ${varTmpDir}/index.md
     du -h ${varTargetDir} >> ${varTmpDir}/index.md
