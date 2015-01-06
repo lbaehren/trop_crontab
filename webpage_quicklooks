@@ -151,7 +151,10 @@ md_page_campaign ()
         {
             varAnchor=`echo ${varCampaign}_${varMeasurement}_${varQuicklook} | tr "[A-Z]" "[a-z]"`
             nofQuicklooks=`find_nof_files ${varCampaign} ${varMeasurement} ${varQuicklook}`
-            echo "   - \ref ${varAnchor}  (${nofQuicklooks} files)"
+            # only create link if there is some contents to link to
+            if [[ ${nofQuicklooks} -ne 0 ]] ; then
+                echo "   - \ref ${varAnchor}  (${nofQuicklooks} files)"
+            fi
         }
     }
     echo ""
@@ -172,7 +175,10 @@ md_page_measurement ()
     {
         varAnchor=`echo ${varCampaign}_${varMeasurement}_${varQuicklook} | tr "[A-Z]" "[a-z]"`
         nofQuicklooks=`find_nof_files $1 $2 ${varQuicklook}`
-        echo " - \subpage ${varAnchor}  (${nofQuicklooks} files)"
+        # only create link if there is some contents to link to
+        if [[ ${nofQuicklooks} -ne 0 ]] ; then
+            echo " - \subpage ${varAnchor}  (${nofQuicklooks} files)"
+        fi
     }
 }
 
@@ -262,13 +268,13 @@ md_pages ()
     }
 
     # Keep track of disk-space used
-    echo ""               >> ${varTmpDir}/index.md
-    echo ""               >> ${varTmpDir}/index.md
-    echo "----"           >> ${varTmpDir}/index.md
-    echo ""               >> ${varTmpDir}/index.md
-    echo "\code"          >> ${varTmpDir}/index.md
-    du -h ${varTargetDir} >> ${varTmpDir}/index.md
-    echo "\endcode"       >> ${varTmpDir}/index.md
+    echo ""                      >> ${varTmpDir}/index.md
+    echo ""                      >> ${varTmpDir}/index.md
+    echo "----"                  >> ${varTmpDir}/index.md
+    echo "**Disk uage summary**" >> ${varTmpDir}/index.md
+    echo "\code"                 >> ${varTmpDir}/index.md
+    du -h ${varTargetDir} | sed s#/home/## >> ${varTmpDir}/index.md
+    echo "\endcode"              >> ${varTmpDir}/index.md
 
     # Run doxygen to generate HTML output
     ${binDoxygen} ${varTmpDir}/doxygen.config
