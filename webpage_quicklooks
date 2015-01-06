@@ -218,6 +218,8 @@ md_page_quicklook ()
             ;;
             "0")
                 echo "  -# ${varFilename} (${varPages} pages)"
+                # Remove file to save disk space
+                rm `find ${varTargetDir} -name "*${varFilename}*"`
             ;;
             *)
                 echo "  -# [${varFilename}](${varLink})  (${varPages} pages)"
