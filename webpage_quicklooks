@@ -148,7 +148,7 @@ md_page_campaign ()
 
         if [[ ${nofMeasurements} -ne 0 ]] ; then
             varAnchor=`echo ${varCampaign}_${varMeasurement} | tr "[A-Z]" "[a-z]"`
-            echo " - \subpage ${varAnchor}"
+            echo " - \subpage ${varAnchor}  (${nofMeasurements} files)"
 
             for varQuicklook in ${varQuicklooks}
             {
@@ -247,11 +247,14 @@ md_pages ()
     for varCampaign in ${varCampaigns}
     {
         ## === Entries to main page =======================
-        echo ""                               >> ${varTmpDir}/index.md
-        echo "`campaign_name ${varCampaign}`" >> ${varTmpDir}/index.md
-        echo "----"                           >> ${varTmpDir}/index.md
-        echo ""                               >> ${varTmpDir}/index.md
-        echo " - \subpage ${varCampaign}"     >> ${varTmpDir}/index.md
+
+        nofFiles=`find_nof_files ${varCampaign}`
+
+        echo ""                                                >> ${varTmpDir}/index.md
+        echo "`campaign_name ${varCampaign}`"                  >> ${varTmpDir}/index.md
+        echo "----"                                            >> ${varTmpDir}/index.md
+        echo ""                                                >> ${varTmpDir}/index.md
+        echo " - \subpage ${varCampaign}  (${nofFiles} files)" >> ${varTmpDir}/index.md
 
         ## === Create subpage for campaign ================
         varPage=${varTmpDir}/`echo ${varCampaign}.md | tr "[A-Z]" "[a-z]"`
