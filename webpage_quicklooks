@@ -161,7 +161,7 @@ md_page_campaign ()
                     echo "   - \ref ${varAnchor}  (${nofQuicklooks} files)"
                 fi
             }
-        }
+        fi
     }
     echo ""
 }
