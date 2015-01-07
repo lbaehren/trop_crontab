@@ -212,12 +212,10 @@ md_page_quicklook ()
         # write output to page
         case ${varPages} in
             "")
-                echo "  -# ${varFilename} (file corrupted)"
                 # Remove file to save disk space
                 rm `find ${varTargetDir} -name "*${varFilename}*"`
             ;;
             "0")
-                echo "  -# ${varFilename} (${varPages} pages)"
                 # Remove file to save disk space
                 rm `find ${varTargetDir} -name "*${varFilename}*"`
             ;;
