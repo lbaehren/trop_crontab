@@ -7,7 +7,7 @@ varTmpDir=${varBasedir}/doxygen_src
 varTargetDir="/home/larsb/public_html/tropomi/quicklooks"
 varSourceDirectories="/deos/larsb/tropomi/results/quicklooks"
 varCampaigns="occ post_env"
-varMeasurements="CheckExposureTime DPQF DrkDpqf DryRun EWLS Filter FPBB_EARTH Laser MONA MONB STAR_EARTH_GEO Stray"
+varMeasurements="CHECK_EXPOSURE_TIME DPQF DRK_DPQF DRY_RUN EWLS FILTER FPBB_EARTH LASER MON_A MON_B STAR_EARTH_GEO STRAY WLS_LIN_GO"
 varQuicklooks="quicklook_raw quicklook_raw_detector quicklook_eps quicklook_eps_detector quicklook_detector quicklook_scan"
 varOutfile="index.html"
 varPageTitle="TROPOMI SWIR quicklooks"
@@ -39,6 +39,119 @@ campaign_name ()
 }
 
 #_______________________________________________________________________________
+#                                                       dissect_measurement_name
+#
+# Dissect "_" separated measurement ID into its subcomponents and convert first
+# letter of that string to upper-case.
+
+dissect_measurement_name ()
+{
+    tmp=`echo $1 | tr "[A-Z]" "[a-z]" | sed s/"_"/" "/g`
+    for NAME in ${tmp}
+    {
+        echo ${NAME} | sed s#`echo ${NAME:0:1}`#`echo ${NAME:0:1} | tr "[a-z]" "[A-Z]"`#
+    }
+}
+
+#_______________________________________________________________________________
+#                                                      measurement_name_variants
+#
+# Generate list with variants of the measurement name; since the annotation of the
+# measurements is not fully standardized we need to take in to account upper/lower
+# case writing, etc.
+
+measurement_name_variants ()
+{
+    varMeasurement=$1
+    varNames=${varMeasurement}
+
+    tmp=`echo ${varMeasurement} | tr "[A-Z]" "[a-z]"`
+    varNames="${varNames} ${tmp}"
+
+    tmp=`echo ${varMeasurement} | sed s/"_"/""/g`
+    varNames="${varNames} ${tmp}"
+
+    tmp=`echo ${varMeasurement} | tr "[A-Z]" "[a-z]" | sed s/"_"/""/g`
+    varNames="${varNames} ${tmp}"
+
+    tmp=`dissect_measurement_name ${varMeasurement}`
+    varNames="${varNames} `echo ${tmp} | sed s#"\ "#""# | sed s#"\ "#"_"#g`"
+
+    tmp=`dissect_measurement_name ${varMeasurement}`
+    varNames="${varNames} `echo ${tmp} | sed s#"\ "#""# | sed s#"\ "#"_"#g | tr '[a-z]' '[A-Z]'`"
+
+    tmp=`dissect_measurement_name ${varMeasurement}`
+    varNames="${varNames} `echo ${tmp} | sed s#"\ "#""# | sed s#"\ "#"_"#g | tr '[A-Z]' '[a-z]'`"
+
+    tmp=`dissect_measurement_name ${varMeasurement}`
+    varNames="${varNames} `echo ${tmp} | sed s#"\ "#"_"#g`"
+
+    tmp=`dissect_measurement_name ${varMeasurement}`
+    varNames="${varNames} `echo ${tmp} | sed s#"\ "#""#g`"
+
+    echo ${varNames}
+}
+
+#_______________________________________________________________________________
+#                                                           find_quicklook_files
+
+find_quicklook_files ()
+{
+    varCampaign=$1
+
+    if [ -z $2 ] ; then
+        # === no measurement type defined =================
+        if [ -z $3 ] ; then
+            varQuicklook=""
+            varFiles=`find ${varTargetDir} -name *.pdf | grep -i ${varCampaign}`
+        else
+            varQuicklook=$3
+            varFiles=`find ${varTargetDir} -name *.pdf | grep -i ${varCampaign} | grep -i ${varQuicklook}`
+        fi
+    else
+        # === measurement type defined ====================
+        varMeasurement=$2
+        varNames=`measurement_name_variants $2`
+        for varName in ${varNames}
+        {
+            if [ -z $3 ] ; then
+                FILES=`find ${varTargetDir} -name *.pdf | grep -i ${varCampaign} | grep -i ${varName}`
+                varFiles="${varFiles} ${FILES}"
+            else
+                varQuicklook=$3
+                FILES=`find ${varTargetDir} -name *.pdf | grep -i ${varCampaign} | grep -i ${varName} | grep -i ${varQuicklook}`
+                varFiles="${varFiles} ${FILES}"
+            fi
+        }
+    fi
+
+    # Clean up and sort list of located files
+    FILES=`echo ${varFiles} | uniq | sort -r`
+
+    # check if the files are ok
+    varFiles=""
+    for FILE in ${FILES}
+    {
+        # extract number of PDF pages
+        varPages=`pdfinfo ${FILE} | grep Pages | tr ":" "\n" | grep -v Pages | sed 's/^[ \t]*//'`
+        # write output to page
+        case ${varPages} in
+            "")
+                # Remove file to save disk space
+                rm -f ${FILE}
+            ;;
+            "0")
+                # Remove file to save disk space
+                rm -f ${FILE}
+            ;;
+            *)
+                varFiles="${varFiles} ${FILE}"
+            ;;
+        esac
+    }
+}
+
+#_______________________________________________________________________________
 #                                                                 find_nof_files
 
 find_nof_files ()
@@ -48,20 +161,16 @@ find_nof_files ()
     if [ -z $2 ] ; then
         # === no measurement type defined =================
         if [ -z $3 ] ; then
-            varQuicklook=""
-            FILES=`find ${varSourceDirectories} -name *.pdf | grep -i ${varCampaign} | sort`
+            FILES=`find_quicklook_files $1`
         else
-            varQuicklook=$3
-            FILES=`find ${varSourceDirectories} -name *.pdf | grep -i ${varCampaign} | grep -i ${varQuicklook} | sort`
+            FILES=`find_quicklook_files $1 $3`
         fi
     else
         # === measurement type defined ====================
-        varMeasurement=$2
         if [ -z $3 ] ; then
-            FILES=`find ${varSourceDirectories} -name *.pdf | grep -i ${varCampaign} | grep -i ${varMeasurement} | sort`
+            FILES=`find_quicklook_files $1 $2`
         else
-            varQuicklook=$3
-            FILES=`find ${varSourceDirectories} -name *.pdf | grep -i ${varCampaign} | grep -i ${varMeasurement} | grep -i ${varQuicklook} | sort`
+            FILES=`find_quicklook_files $1 $2 $3`
         fi
     fi
 
@@ -202,31 +311,16 @@ md_page_quicklook ()
 
     ## === List of quicklooks
 
-    FILES=`find ${varSourceDirectories} -name *.pdf | grep -i ${varCampaign} | grep -i ${varMeasurement} | grep -i ${varQuicklook} | sort -r`
+    FILES=`find_quicklook_files $1 $2 $3`
     for FILE in ${FILES}
     {
         varFilename=`echo ${FILE} | sed s#${varSourceDirectories}/${varCampaign}/## | sed s#.detector4.pdf##`
         varLink=`echo ${FILE} | sed s#${varSourceDirectories}/##`
         # extract number of PDF pages
         varPages=`pdfinfo ${FILE} | grep Pages | tr ":" "\n" | grep -v Pages | sed 's/^[ \t]*//'`
-        # write output to page
-        case ${varPages} in
-            "")
-                echo "  -# ${varFilename} (file corrupted)"
-                # Remove file to save disk space
-                rm `find ${varTargetDir} -name "*${varFilename}*"`
-            ;;
-            "0")
-                echo "  -# ${varFilename} (${varPages} pages)"
-                # Remove file to save disk space
-                rm `find ${varTargetDir} -name "*${varFilename}*"`
-            ;;
-            *)
-                echo "  -# [${varFilename}](${varLink})  (${varPages} pages)"
-            ;;
-        esac
+        # create entry on page
+        echo "  -# [${varFilename}](${varLink})  (${varPages} pages)"
     }
-
 }
 
 ##______________________________________________________________________________
