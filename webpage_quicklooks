@@ -342,7 +342,7 @@ md_pages ()
     # Run doxygen to generate HTML output
     ${binDoxygen} ${varTmpDir}/doxygen.config
     # Remove temporary directory
-#    rm -rf ${varTmpDir}
+    rm -rf ${varTmpDir}
 }
 
 ##______________________________________________________________________________
