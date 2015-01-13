@@ -116,7 +116,7 @@ find_nof_files ()
             nofFiles=`cat ${varTmpDir}/${varCampaign}.${varMeasurement}.txt | grep $3`
         fi
     fi
-	
+
 	echo ${nofFiles}  | wc -w  | sed 's/^[ \t]*//'
 }
 
@@ -341,6 +341,10 @@ md_pages ()
 
     # Run doxygen to generate HTML output
     ${binDoxygen} ${varTmpDir}/doxygen.config
+
+    # Debugging output
+    cat ${varTmpDir}/occ.LASER.txt | sort | uniq
+
     # Remove temporary directory
     rm -rf ${varTmpDir}
 }
@@ -357,28 +361,28 @@ find_measurements ()
 		for varMeasurement in ${varMeasurements}
 		{
 			echo " - ${varCampaign}.${varMeasurement} quicklooks"
-			
+
 			varLogfile=${varTmpDir}/${varCampaign}.${varMeasurement}.txt
 			rm -f ${varLogfile}
 
 			## =============================================
-	
+
 			echo "   -> Extracting initial list"
-			
+
 			for varName in `measurement_name_variants ${varMeasurement}`
 			{
 				find ${varTargetDir}/${varCampaign}  -name "*${varName}*.pdf" >> ${varLogfile}
 			}
-			
+
 			echo "   -> Removing multiple entries"
-			
+
 			cat ${varLogfile} | sort -r | uniq > tmp
 			mv tmp ${varLogfile}
 
 			## =============================================
-	
+
 			echo "   -> Checking document pages"
-			
+
 			for FILE in `cat ${varLogfile}`
 			{
         		# extract number of PDF pages
@@ -394,12 +398,12 @@ find_measurements ()
                 		rm -f ${FILE}
             		;;
             		*)
-                		echo $FILE >> tmp
+                		echo $FILE >> ${varLogfile}.tmp
             		;;
         		esac
 			}
 			# Store the vetted list
-			mv tmp ${varLogfile}
+			mv ${varLogfile}.tmp ${varLogfile}
 		}
 	}
 
@@ -409,7 +413,7 @@ find_measurements ()
 ## === Processing ==============================================================
 
 # Syncronize data bewteen KNMI and SRON
-#sync_data
+sync_data
 
 cd ${varBasedir}
 
