@@ -185,6 +185,8 @@ md_header ()
 
 ##______________________________________________________________________________
 ##                                                              md_page_campaign
+##
+## Generate the page with an overview per measurement campaign (post_env, occ)
 
 md_page_campaign ()
 {
@@ -374,10 +376,16 @@ find_measurements ()
 				find ${varTargetDir}/${varCampaign}  -name "*${varName}*.pdf" >> ${varLogfile}
 			}
 
+            echo "      `cat ${varLogfile} | wc -l` entries"
+
+			## =============================================
+
 			echo "   -> Removing multiple entries"
 
-			cat ${varLogfile} | sort -r | uniq > tmp
-			mv tmp ${varLogfile}
+			cat ${varLogfile} | sort -r | uniq > ${varLogfile}.tmp
+			mv ${varLogfile}.tmp ${varLogfile}
+
+            echo "      `cat ${varLogfile} | wc -l` entries"
 
 			## =============================================
 
@@ -402,9 +410,11 @@ find_measurements ()
             		;;
         		esac
 			}
-			# Store the vetted list
+			# Store the vetted list ...
 			mv ${varLogfile}.tmp ${varLogfile}
-		}
+            # ... and provide some statistice
+            echo "      `cat ${varLogfile} | wc -l` entries"
+		}  ##  end loop "for varMeasurement" ====================
 	}
 
 	echo "Searching for quicklook files ... DONE"
