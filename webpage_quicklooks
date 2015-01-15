@@ -288,6 +288,9 @@ md_pages ()
     # Header for main page
     echo "${varPageTitle}  {#mainpage}"  > ${varTmpDir}/index.md
     echo "==============="              >> ${varTmpDir}/index.md
+    echo ""                             >> ${varTmpDir}/index.md
+    echo " - [Quicklook reports](http://idaf.tropomi.eu/omdb/serve_analysis_results/quicklook)" >> ${varTmpDir}/index.md
+    echo " - [OCAL logbook](http://idaf.tropomi.eu/logbook/logbook)" >> ${varTmpDir}/index.md
 
     for varCampaign in ${varCampaigns}
     {
