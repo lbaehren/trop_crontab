@@ -7,7 +7,7 @@ varTmpDir=${varBasedir}/doxygen_src
 varTargetDir="/home/larsb/public_html/tropomi/quicklooks"
 varSourceDirectories="/deos/larsb/tropomi/results/quicklooks"
 varCampaigns="occ post_env"
-varMeasurements="CHECK_EXPOSURE_TIME DLED_LIN DRK_DPQF DRY_RUN EWLS FILTER FPBB_EARTH LASER MON_A MON_B STAR_EARTH_GEO STRAY WLS_LIN_GO"
+varMeasurements="CELL_EARTH CELL_SUN CHECK_EXPOSURE_TIME DLED_LIN DRK_DPQF DRY_RUN EWLS FILTER FPBB_EARTH LASER MON_A MON_B STAR_EARTH_GEO STRAY WLS_LIN_GO"
 varQuicklooks="quicklook_raw quicklook_raw_detector quicklook_eps quicklook_eps_detector quicklook_detector quicklook_scan"
 varOutfile="index.html"
 varPageTitle="TROPOMI SWIR quicklooks"
@@ -376,16 +376,12 @@ find_measurements ()
 				find ${varTargetDir}/${varCampaign}  -name "*${varName}*.pdf" >> ${varLogfile}
 			}
 
-            echo "      `cat ${varLogfile} | wc -l` entries"
-
 			## =============================================
 
 			echo "   -> Removing multiple entries"
 
 			cat ${varLogfile} | sort -r | uniq > ${varLogfile}.tmp
 			mv ${varLogfile}.tmp ${varLogfile}
-
-            echo "      `cat ${varLogfile} | wc -l` entries"
 
 			## =============================================
 
@@ -410,10 +406,8 @@ find_measurements ()
             		;;
         		esac
 			}
-			# Store the vetted list ...
+			# Store the vetted list
 			mv ${varLogfile}.tmp ${varLogfile}
-            # ... and provide some statistice
-            echo "      `cat ${varLogfile} | wc -l` entries"
 		}  ##  end loop "for varMeasurement" ====================
 	}
 
