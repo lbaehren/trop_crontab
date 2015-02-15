@@ -7,8 +7,9 @@ varTmpDir=${varBasedir}/doxygen_src
 varTargetDir="/home/larsb/public_html/tropomi/quicklooks"
 varSourceDirectories="/deos/larsb/tropomi/results/quicklooks"
 varCampaigns="occ"
-varMeasurements="CELL_EARTH CELL_SUN CHECK_EXPOSURE_TIME DARK DLED_LIN DRK_DPQF DRY_RUN EWLS FEL_EARTH FEL_SUN FILTER FPBB_EARTH FPBB_SUN ISRF LASER LASER_EARTH_ISRF MON_A MON_B STAR_EARTH_GEO STRAY SWIRLS_EARTH_ISRF SWIRLS_EARTH_STRAY WLS_LIN_GO"
-varQuicklooks="quicklook_raw quicklook_raw_detector quicklook_eps quicklook_eps_detector quicklook_detector quicklook_scan report_detector"
+varMeasurements="CELL_EARTH CELL_SUN CHECK_EXPOSURE_TIME DARK DLED_LIN DRK_DPQF DRY_RUN EWLS FEL_EARTH FEL_SUN FILTER FPBB_EARTH FPBB_SUN LASER LASER_EARTH_ISRF MON_A MON_B STAR_EARTH_GEO STRAY SWIRLS_EARTH_INHOMO SWIRLS_EARTH_ISRF SWIRLS_EARTH_STRAY WLS_LIN_GO"
+varQuicklooks="quicklook_raw quicklook_raw_detector quicklook_eps quicklook_eps_detector quicklook_detector quicklook_scan report_detector quicklook_signal"
+varSuffixes="pdf png"
 varOutfile="index.html"
 varPageTitle="TROPOMI SWIR quicklooks"
 
@@ -132,6 +133,26 @@ sync_data ()
     # ... and transfer data from IDAF to SRON
     make sync_quicklooks
     make sync_reports
+
+    # Collect additional files prepared by Richard
+    cd /home/richardh/Pictures
+    for varMeasurement in `ls | grep SwirlsEarthIsrf`
+    {
+	cd /home/richardh/Pictures/${varMeasurement}
+	for FILE in `ls *.png`
+	{
+	    varFilename="${varMeasurement}.`echo ${FILE} | sed s/'quicklook'/'quicklook_signal'/`"
+	    cp ${FILE} /deos/larsb/tropomi/results/quicklooks/occ/${varFilename}
+	}
+    }
+
+    # Change into local base directory ...
+    cd /data/larsb/tropomi
+    # ... and cop data to the web directory
+    for varCampaign in ${varCampaigns}
+    {
+        /usr/bin/rsync -axuP --delete results/quicklooks/${varCampaign} ${varTargetDir}
+    }
 }
 
 ##______________________________________________________________________________
@@ -200,7 +221,7 @@ md_page_campaign ()
     echo ""
     for varMeasurement in ${varMeasurements}
     {
-		nofMeasurements=`find_nof_files ${varCampaign}  ${varMeasurement}`
+	nofMeasurements=`find_nof_files ${varCampaign}  ${varMeasurement}`
 
         if [[ ${nofMeasurements} -ne 0 ]] ; then
             varAnchor=`echo ${varCampaign}_${varMeasurement} | tr "[A-Z]" "[a-z]"`
@@ -265,12 +286,18 @@ md_page_quicklook ()
     FILES=`cat ${varTmpDir}/${varCampaign}.${varMeasurement}.txt | grep ${varQuicklook}`
     for FILE in ${FILES}
     {
-        varFilename=`echo ${FILE} | sed s#${varTargetDir}/${varCampaign}/## | sed s#.detector4.pdf##`
         varLink=`echo ${FILE} | sed s#${varTargetDir}/##`
-        # extract number of PDF pages
-        varPages=`pdfinfo ${FILE} | grep Pages | tr ":" "\n" | grep -v Pages | sed 's/^[ \t]*//'`
-        # create entry on page
-        echo "  -# [${varFilename}](${varLink})  (${varPages} pages)"
+
+        if [[ `grep pdf $FILE` ]] ; then
+            varFilename=`echo ${FILE} | sed s#${varTargetDir}/${varCampaign}/## | sed s#.detector4.pdf##`
+            # extract number of PDF pages
+            varPages=`pdfinfo ${FILE} | grep Pages | tr ":" "\n" | grep -v Pages | sed 's/^[ \t]*//'`
+            # create entry on page
+            echo "  -# [${varFilename}](${varLink})  (${varPages} pages)"
+        else
+            varFilename=`echo ${FILE} | sed s#${varTargetDir}/${varCampaign}/##`
+            echo "  -# [${varFilename}](${varLink})"
+        fi
     }
 }
 
@@ -285,8 +312,8 @@ md_pages ()
     # Create configuration file for Doxygen
     doxygen_config > ${varTmpDir}/doxygen.config
 
-	# Find measurements and write results to temporary output
-	find_measurements
+    # Find measurements and write results to temporary output
+    find_measurements
 
     # Header for main page
     echo "${varPageTitle}  {#mainpage}"  > ${varTmpDir}/index.md
@@ -299,7 +326,7 @@ md_pages ()
     {
         ## === Entries to main page =======================
 
-		nofFiles=`find_nof_files ${varCampaign}`
+	nofFiles=`find_nof_files ${varCampaign}`
 
         echo ""                                                >> ${varTmpDir}/index.md
         echo "`campaign_name ${varCampaign}`"                  >> ${varTmpDir}/index.md
@@ -328,7 +355,7 @@ md_pages ()
 
                 for varQuicklook in ${varQuicklooks}
                 {
-					nofQuicklooks=`find_nof_files ${varCampaign} ${varMeasurement} ${varQuicklook}`
+		            nofQuicklooks=`find_nof_files ${varCampaign} ${varMeasurement} ${varQuicklook}`
                     if [[ ${nofQuicklooks} -ne 0 ]] ; then
                         varPage=${varTmpDir}/`echo ${varCampaign}_${varMeasurement}_${varQuicklook}.md | tr "[A-Z]" "[a-z]"`
                         md_page_quicklook ${varCampaign} ${varMeasurement} ${varQuicklook} > ${varPage}
@@ -351,7 +378,7 @@ md_pages ()
     ${binDoxygen} ${varTmpDir}/doxygen.config
 
     # Debugging output
-    cat ${varTmpDir}/occ.LASER.txt | sort | uniq
+    cat ${varTmpDir}/occ.SWIRLS_EARTH_ISRF.txt | sort | uniq
 
     # Remove temporary directory
     rm -rf ${varTmpDir}
@@ -378,9 +405,10 @@ find_measurements ()
 			echo "   -> Extracting initial list"
 
 			for varName in `measurement_name_variants ${varMeasurement}`
-			{
-				find ${varTargetDir}/${varCampaign}  -name "*${varName}*.pdf" >> ${varLogfile}
-			}
+            {
+	    		find ${varTargetDir}/${varCampaign}  -name "*${varName}*" >> ${varLogfile}
+            }
+            echo "`grep png ${varLogfile} |wc -l` PNG files found for ${varMeasurement}"
 
 			## =============================================
 
@@ -395,22 +423,26 @@ find_measurements ()
 
 			for FILE in `cat ${varLogfile}`
 			{
-        		# extract number of PDF pages
-        		varPages=`pdfinfo ${FILE} | grep Pages | tr ":" "\n" | grep -v Pages | sed 's/^[ \t]*//'`
-        		# write output to page
-        		case ${varPages} in
-            		"")
-                		# Remove file to save disk space
-                		rm -f ${FILE}
-            		;;
-            		"0")
-                		# Remove file to save disk space
-                		rm -f ${FILE}
-            		;;
-            		*)
-                		echo $FILE >> ${varLogfile}.tmp
-            		;;
-        		esac
+                if [[ `grep pdf $FILE` ]] ; then
+        	    	# extract number of PDF pages
+            		varPages=`pdfinfo ${FILE} | grep Pages | tr ":" "\n" | grep -v Pages | sed 's/^[ \t]*//'`
+            		# write output to page
+            		case ${varPages} in
+            	    	"")
+                    		# Remove file to save disk space
+                    		rm -f ${FILE}
+                		;;
+                		"0")
+                		    # Remove file to save disk space
+                	    	rm -f ${FILE}
+            	    	;;
+                		*)
+                    		echo $FILE >> ${varLogfile}.tmp
+                		;;
+            		esac
+                else
+                    echo $FILE >> ${varLogfile}.tmp
+                fi
 			}
 			# Store the vetted list
 			mv ${varLogfile}.tmp ${varLogfile}
