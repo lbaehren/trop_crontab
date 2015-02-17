@@ -9,4 +9,4 @@ basedir=/home/larsb/Documents/crontab
 00     1    *   *   *   $basedir/update_sw > $basedir/update_sw.log 2>&1
 #00     2    *   *   *   $basedir/dashboard_swir > $basedir/dashboard_swir.log 2>&1
 
- *  */1  *   *   *   $basedir/webpage_quicklooks > $basedir/webpage_quicklooks.log 2>&1
+*   */1   *   *   *   $basedir/webpage_quicklooks > $basedir/webpage_quicklooks.log 2>&1
