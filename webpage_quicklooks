@@ -1,13 +1,29 @@
-#!/bin//bash
+# (c) SRON - Netherlands Institute for Space Research (2014-2015).
+# All Rights Reserved.
+# This software is distributed under the BSD 2-clause license.
 
-## === Variables ===============================================================
+## Variables
+#
+#  Directory structure:
+#
+#  /deos
+#   `-- larsb
+#       |-- sw
+#       |   `-- bin            .. Custom software installation
+#       |-- tmp                .. Temporary files
+#       |   `-- quicklooks
+#       `-- tropomi            .. TROPOMI-related data
+#           `-- results
+#               `-- quicklooks
+#
 
 varBasedir=`pwd`
-varTmpDir=${varBasedir}/doxygen_src
+varSourceDir="/deos/larsb/tropomi/results/quicklooks"
+varTmpDir=/deos/larsb/tmp/quicklooks
 varTargetDir="/home/larsb/public_html/tropomi/quicklooks"
-varSourceDirectories="/deos/larsb/tropomi/results/quicklooks"
+varLockfile=/var/lock/webpage_quicklooks.lock
 varCampaigns="occ"
-varMeasurements="CELL_EARTH CELL_SUN CHECK_EXPOSURE_TIME DARK DLED_LIN DRK_DPQF DRY_RUN EWLS FEL_EARTH FEL_SUN FILTER FPBB_EARTH FPBB_SUN LASER LASER_EARTH_ISRF MON_A MON_B STAR_EARTH_GEO STRAY SWIRLS_EARTH_INHOMO SWIRLS_EARTH_ISRF SWIRLS_EARTH_STRAY WLS_LIN_GO"
+varMeasurements="CELL_EARTH CELL_SUN CHECK_EXPOSURE_TIME DARK DLED_LIN DRK_DPQF DRY_RUN EWLS FEL_EARTH FEL_SUN FILTER_EARTH_STRAY FILTER_EARTH_SUN FPBB_EARTH FPBB_SUN LASER LASER_EARTH_ISRF MON_A MON_B STAR_EARTH_GEO STRAY SWIRLS_EARTH_INHOMO SWIRLS_EARTH_ISRF SWIRLS_EARTH_STRAY WLS_LIN_GO"
 varQuicklooks="quicklook_raw quicklook_raw_detector quicklook_eps quicklook_eps_detector quicklook_detector quicklook_scan report_detector quicklook_signal"
 varSuffixes="pdf png"
 varOutfile="index.html"
@@ -15,7 +31,11 @@ varPageTitle="TROPOMI SWIR quicklooks"
 
 binDoxygen=/data/larsb/sw/bin/doxygen
 
-## === Functions ===============================================================
+# ==============================================================================
+#
+#  Functions
+#
+# ==============================================================================
 
 #_______________________________________________________________________________
 #                                                                  campaign_name
@@ -41,10 +61,11 @@ campaign_name ()
 
 #_______________________________________________________________________________
 #                                                       dissect_measurement_name
+
+## Dissect "_" separated measurement ID into its subcomponents
 #
 # Dissect "_" separated measurement ID into its subcomponents and convert first
 # letter of that string to upper-case.
-
 dissect_measurement_name ()
 {
     tmp=`echo $1 | tr "[A-Z]" "[a-z]" | sed s/"_"/" "/g`
@@ -56,11 +77,12 @@ dissect_measurement_name ()
 
 #_______________________________________________________________________________
 #                                                      measurement_name_variants
+
+## Generate list with variants of the measurement name
 #
 # Generate list with variants of the measurement name; since the annotation of the
 # measurements is not fully standardized we need to take in to account upper/lower
 # case writing, etc.
-
 measurement_name_variants ()
 {
     varMeasurement=$1
@@ -94,8 +116,93 @@ measurement_name_variants ()
 }
 
 #_______________________________________________________________________________
+#                                                              find_measurements
+
+## Find quicklook data for measurements
+find_measurements ()
+{
+	echo "Searching for quicklook files ..."
+
+	for varCampaign in ${varCampaigns}
+	{
+		for varMeasurement in ${varMeasurements}
+		{
+			echo " - ${varCampaign}.${varMeasurement} quicklooks"
+
+			varLogfile=${varTmpDir}/${varCampaign}.${varMeasurement}.txt
+			rm -f ${varLogfile}
+
+			## =============================================
+
+			echo "   -> Extracting initial list"
+
+			for varName in `measurement_name_variants ${varMeasurement}`
+            {
+	    		find ${varSourceDir}/${varCampaign}  -name "*${varName}*" >> ${varLogfile}
+            }
+
+			## =============================================
+
+			echo "   -> Removing multiple entries"
+
+            if [[ `stat -c%s ${varLogfile}` == 0 ]] ; then
+                echo "      -> No datasets found - removing index file."
+                rm -f ${varLogfile}
+            else
+                cat ${varLogfile} | sort -r | uniq > ${varLogfile}.tmp
+                mv ${varLogfile}.tmp ${varLogfile}
+
+                ## =========================================
+
+                echo "   -> Checking document pages"
+
+                for FILE in `cat ${varLogfile}`
+                {
+                    if [[ `grep pdf $FILE` ]] ; then
+                        # extract number of PDF pages
+                        varPages=`pdfinfo ${FILE} | grep Pages | tr ":" "\n" | grep -v Pages | sed 's/^[ \t]*//'`
+                        # write output to page
+                        case ${varPages} in
+                            "")
+                                # Remove file to save disk space
+                                rm -f ${FILE}
+                            ;;
+                            "0")
+                                # Remove file to save disk space
+                                rm -f ${FILE}
+                            ;;
+                            *)
+                                echo $FILE >> ${varLogfile}.tmp
+                            ;;
+                        esac
+                    else
+                        echo $FILE >> ${varLogfile}.tmp
+                    fi
+                }  ##  end loop "for FILE"
+
+                # Store the vetted list (if it is not empty)
+                if [[ `stat -c%s ${varLogfile}.tmp` == 0 ]] ; then
+                    echo " - ${varLogfile}.tmp is empty - removing it now"
+                    rm -f ${varLogfile}.tmp
+                else
+                    mv ${varLogfile}.tmp ${varLogfile}
+                fi
+
+            fi
+
+		}  ##  end loop "for varMeasurement" ====================
+
+	}
+
+	echo "Searching for quicklook files ... DONE"
+}
+
+#_______________________________________________________________________________
 #                                                                 find_nof_files
 
+## Find the number of files of a given type
+#
+#  @param varCampaign - Identifier for the measurement campaign.
 find_nof_files ()
 {
     varCampaign=$1
@@ -103,63 +210,80 @@ find_nof_files ()
     if [ -z $2 ] ; then
         # === no measurement type defined =================
         if [ -z $3 ] ; then
-            nofFiles=`cat ${varTmpDir}/${varCampaign}.*.txt`
+            varIndexFile="${varTmpDir}/${varCampaign}.*.txt"
         else
 			# === Quicklook type defined ==================
-            nofFiles=`cat ${varTmpDir}/${varCampaign}.*.txt | grep $3`
+            varIndexFile="${varTmpDir}/${varCampaign}.*.txt"
         fi
     else
 		varMeasurement=$2
         # === measurement type defined ====================
         if [ -z $3 ] ; then
-            nofFiles=`cat ${varTmpDir}/${varCampaign}.${varMeasurement}.txt`
+            varIndexFile="${varTmpDir}/${varCampaign}.${varMeasurement}.txt"
         else
-            nofFiles=`cat ${varTmpDir}/${varCampaign}.${varMeasurement}.txt | grep $3`
+            varIndexFile="${varTmpDir}/${varCampaign}.${varMeasurement}.txt"
         fi
     fi
 
-	echo ${nofFiles}  | wc -w  | sed 's/^[ \t]*//'
+    if [[ -f ${varIndexFile} ]] ; then
+        if [ -z $3 ] ; then
+            nofFiles=`cat ${varIndexFile}`
+        else
+            nofFiles=`cat ${varIndexFile} | grep $3`
+        fi
+        # report nof. files
+        echo ${nofFiles}  | wc -w  | sed 's/^[ \t]*//'
+    else
+        echo "0"
+    fi
 }
 
-##______________________________________________________________________________
-##                                                                     sync_data
-##
-##  Synchronize (import) data from IDAF to SRON.
+#_______________________________________________________________________________
+#                                                                      sync_data
 
+##  Synchronize (import) data from IDAF to SRON.
+#
+#   Synchronization of data:
+#   1. rsync from IDAF (KNMI) to local data disk at SRON.
+#   2. Collect additional data, e.g. plots generated by Richard
+#
+#   Organization of the local directories:
+#
+#    /deos
+#     `-- larsb
+#         `-- tropomi
+#             `-- results
+#                 `-- quicklooks
+#                     |-- occ
+#                     |-- post_env
+#                     `-- pre_env
+#
 sync_data ()
 {
-    # Change into local base directory ...
+    # rsync from IDAF (KNMI) to local data disk at SRON
+
     cd /data/larsb/tropomi
-    # ... and transfer data from IDAF to SRON
     make sync_quicklooks
     make sync_reports
 
     # Collect additional files prepared by Richard
+
     cd /home/richardh/Pictures
     for varMeasurement in `ls | grep SwirlsEarthIsrf`
     {
-	cd /home/richardh/Pictures/${varMeasurement}
-	for FILE in `ls *.png`
-	{
-	    varFilename="${varMeasurement}.`echo ${FILE} | sed s/'quicklook'/'quicklook_signal'/`"
-	    cp ${FILE} /deos/larsb/tropomi/results/quicklooks/occ/${varFilename}
-	}
-    }
-
-    # Change into local base directory ...
-    cd /data/larsb/tropomi
-    # ... and cop data to the web directory
-    for varCampaign in ${varCampaigns}
-    {
-        /usr/bin/rsync -axuP --delete results/quicklooks/${varCampaign} ${varTargetDir}
+        cd /home/richardh/Pictures/${varMeasurement}
+        for FILE in `ls *.png`
+        {
+            varFilename="${varMeasurement}.`echo ${FILE} | sed s/'quicklook'/'quicklook_signal'/`"
+            cp ${FILE} ${varSourceDir}/occ/${varFilename}
+        }
     }
 }
 
-##______________________________________________________________________________
-##                                                                doxygen_config
-##
-## Configuration settings for runnning Doxygen
+#_______________________________________________________________________________
+#                                                                 doxygen_config
 
+## Configuration settings for runnning Doxygen
 doxygen_config ()
 {
     echo "#---------------------------------------------------------------------------"
@@ -175,8 +299,8 @@ doxygen_config ()
     echo "#---------------------------------------------------------------------------"
     echo "INPUT                  = ${varTmpDir}"
     echo "RECURSIVE              = YES"
-    echo "IMAGE_PATH             = ${varSourceDirectories}"
-    echo "HTML_OUTPUT            = ${varTargetDir}"
+    echo "IMAGE_PATH             = ${varSourceDir}"
+    echo "HTML_OUTPUT            = ${varTmpDir}/html"
     echo "#---------------------------------------------------------------------------"
     echo "# Configuration options related to output"
     echo "#---------------------------------------------------------------------------"
@@ -207,11 +331,12 @@ md_header ()
     echo ""
 }
 
-##______________________________________________________________________________
-##                                                              md_page_campaign
-##
-## Generate the page with an overview per measurement campaign (post_env, occ)
+#_______________________________________________________________________________
+#                                                               md_page_campaign
 
+## Generate the page with an overview per measurement campaign (post_env, occ)
+#
+#  @param varCampaign - Identifier for the measurement campaign.
 md_page_campaign ()
 {
     varCampaign=$1
@@ -221,7 +346,7 @@ md_page_campaign ()
     echo ""
     for varMeasurement in ${varMeasurements}
     {
-	nofMeasurements=`find_nof_files ${varCampaign}  ${varMeasurement}`
+        nofMeasurements=`find_nof_files ${varCampaign}  ${varMeasurement}`
 
         if [[ ${nofMeasurements} -ne 0 ]] ; then
             varAnchor=`echo ${varCampaign}_${varMeasurement} | tr "[A-Z]" "[a-z]"`
@@ -243,9 +368,13 @@ md_page_campaign ()
     echo ""
 }
 
-##______________________________________________________________________________
-##                                                           md_page_measurement
+#_______________________________________________________________________________
+#                                                            md_page_measurement
 
+## Create page for a given measuremt type
+#
+#  @param varCampaign    - Identifier for the measurement campaign.
+#  @param varMeasurement - Identifier for the measurement.
 md_page_measurement ()
 {
     varCampaign=$1
@@ -265,8 +394,8 @@ md_page_measurement ()
     }
 }
 
-##______________________________________________________________________________
-##                                                             md_page_quicklook
+#_______________________________________________________________________________
+#                                                              md_page_quicklook
 
 md_page_quicklook ()
 {
@@ -274,35 +403,41 @@ md_page_quicklook ()
     varMeasurement=$2
     varQuicklook=$3
     varAnchor=`echo ${varCampaign}_${varMeasurement}_${varQuicklook} | tr "[A-Z]" "[a-z]"`
+    varIndexFile="${varTmpDir}/${varCampaign}.${varMeasurement}.txt"
 
     md_header ${varQuicklook} ${varAnchor}
 
 	echo "\ingroup ${varCampaign}"
 	echo "\ingroup ${varMeasurement}"
 	echo "\ingroup ${varQuicklook}"
+    echo ""
 
     ## === List of quicklooks ==============================
 
-    FILES=`cat ${varTmpDir}/${varCampaign}.${varMeasurement}.txt | grep ${varQuicklook}`
-    for FILE in ${FILES}
-    {
-        varLink=`echo ${FILE} | sed s#${varTargetDir}/##`
+    if [[ -f ${varIndexFile} ]] ; then
 
-        if [[ `grep pdf $FILE` ]] ; then
-            varFilename=`echo ${FILE} | sed s#${varTargetDir}/${varCampaign}/## | sed s#.detector4.pdf##`
-            # extract number of PDF pages
-            varPages=`pdfinfo ${FILE} | grep Pages | tr ":" "\n" | grep -v Pages | sed 's/^[ \t]*//'`
-            # create entry on page
-            echo "  -# [${varFilename}](${varLink})  (${varPages} pages)"
-        else
-            varFilename=`echo ${FILE} | sed s#${varTargetDir}/${varCampaign}/##`
-            echo "  -# [${varFilename}](${varLink})"
-        fi
-    }
+        FILES=`cat ${varIndexFile} | grep ${varQuicklook}`
+        for FILE in ${FILES}
+        {
+            varLink=`echo ${FILE} | sed s#${varSourceDir}/##`
+
+            if [[ `grep pdf $FILE` ]] ; then
+                varFilename=`echo ${FILE} | sed s#${varSourceDir}/${varCampaign}/## | sed s#.detector4.pdf##`
+                # extract number of PDF pages
+                varPages=`pdfinfo ${FILE} | grep Pages | tr ":" "\n" | grep -v Pages | sed 's/^[ \t]*//'`
+                # create entry on page
+                echo "  -# [${varFilename}](${varLink})  (${varPages} pages)"
+            else
+                varFilename=`echo ${FILE} | sed s#${varSourceDir}/${varCampaign}/##`
+                echo "  -# [${varFilename}](${varLink})"
+            fi
+        }
+
+    fi
 }
 
-##______________________________________________________________________________
-##                                                                      md_pages
+#_______________________________________________________________________________
+#                                                                       md_pages
 
 md_pages ()
 {
@@ -322,11 +457,13 @@ md_pages ()
     echo " - [Quicklook reports](http://idaf.tropomi.eu/omdb/serve_analysis_results/quicklook) (KNMI)" >> ${varTmpDir}/index.md
     echo " - [OCAL logbook](http://idaf.tropomi.eu/logbook/logbook) (KNMI)" >> ${varTmpDir}/index.md
 
+    echo "Generating pages ..."
+
     for varCampaign in ${varCampaigns}
     {
         ## === Entries to main page =======================
 
-	nofFiles=`find_nof_files ${varCampaign}`
+        nofFiles=`find_nof_files ${varCampaign}`
 
         echo ""                                                >> ${varTmpDir}/index.md
         echo "`campaign_name ${varCampaign}`"                  >> ${varTmpDir}/index.md
@@ -340,6 +477,7 @@ md_pages ()
 
         for varMeasurement in ${varMeasurements}
         {
+            echo " - ${varCampaign}.${varMeasurement}"
             ## === Entries to main page ===================
 
 			nofMeasurements=`find_nof_files ${varCampaign} ${varMeasurement}`
@@ -365,6 +503,8 @@ md_pages ()
         }
     }
 
+    echo "Generating pages ... DONE"
+
     # Keep track of disk-space used
     echo ""                       >> ${varTmpDir}/index.md
     echo ""                       >> ${varTmpDir}/index.md
@@ -377,86 +517,47 @@ md_pages ()
     # Run doxygen to generate HTML output
     ${binDoxygen} ${varTmpDir}/doxygen.config
 
-    # Debugging output
-    cat ${varTmpDir}/occ.SWIRLS_EARTH_ISRF.txt | sort | uniq
+    publish_pages
 
     # Remove temporary directory
-    rm -rf ${varTmpDir}
+#    rm -rf ${varTmpDir}
 }
 
-##______________________________________________________________________________
-##                                                             find_measurements
+#_______________________________________________________________________________
+#                                                                       md_pages
 
-find_measurements ()
+## Publish the generated pages to web-server directory
+publish_pages ()
 {
-	echo "Searching for quicklook files ..."
+    # Copy HTML pages
+    rsync -axuzP --delete ${varTmpDir}/html/* ${varTargetDir}
 
-	for varCampaign in ${varCampaigns}
-	{
-		for varMeasurement in ${varMeasurements}
-		{
-			echo " - ${varCampaign}.${varMeasurement} quicklooks"
-
-			varLogfile=${varTmpDir}/${varCampaign}.${varMeasurement}.txt
-			rm -f ${varLogfile}
-
-			## =============================================
-
-			echo "   -> Extracting initial list"
-
-			for varName in `measurement_name_variants ${varMeasurement}`
-            {
-	    		find ${varTargetDir}/${varCampaign}  -name "*${varName}*" >> ${varLogfile}
-            }
-            echo "`grep png ${varLogfile} |wc -l` PNG files found for ${varMeasurement}"
-
-			## =============================================
-
-			echo "   -> Removing multiple entries"
-
-			cat ${varLogfile} | sort -r | uniq > ${varLogfile}.tmp
-			mv ${varLogfile}.tmp ${varLogfile}
-
-			## =============================================
-
-			echo "   -> Checking document pages"
-
-			for FILE in `cat ${varLogfile}`
-			{
-                if [[ `grep pdf $FILE` ]] ; then
-        	    	# extract number of PDF pages
-            		varPages=`pdfinfo ${FILE} | grep Pages | tr ":" "\n" | grep -v Pages | sed 's/^[ \t]*//'`
-            		# write output to page
-            		case ${varPages} in
-            	    	"")
-                    		# Remove file to save disk space
-                    		rm -f ${FILE}
-                		;;
-                		"0")
-                		    # Remove file to save disk space
-                	    	rm -f ${FILE}
-            	    	;;
-                		*)
-                    		echo $FILE >> ${varLogfile}.tmp
-                		;;
-            		esac
-                else
-                    echo $FILE >> ${varLogfile}.tmp
-                fi
-			}
-			# Store the vetted list
-			mv ${varLogfile}.tmp ${varLogfile}
-		}  ##  end loop "for varMeasurement" ====================
-	}
-
-	echo "Searching for quicklook files ... DONE"
+    # Copy quicklook files
+    for varCampaign in ${varCampaigns}
+    {
+        rsync -axuzP --delete ${varSourceDir}/${varCampaign} ${varTargetDir}
+    }
 }
 
 ## === Processing ==============================================================
 
-# Syncronize data bewteen KNMI and SRON
-sync_data
+if [ ! -e $varLockfile ]; then
+   trap "rm -f $varLockfile; exit" INT TERM EXIT
+   touch $varLockfile
 
-cd ${varBasedir}
+    # ============================================
 
-md_pages
+    # Syncronize data between KNMI and SRON
+    sync_data
+
+    # Generate web-pages
+    cd ${varBasedir}
+    md_pages
+
+    # ============================================
+
+   rm -f $varLockfile
+   trap - INT TERM EXIT
+else
+   echo "webpage_quicklooks is already running"
+fi
