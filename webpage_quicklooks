@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # (c) SRON - Netherlands Institute for Space Research (2014-2015).
 # All Rights Reserved.
 # This software is distributed under the BSD 2-clause license.
@@ -517,10 +519,13 @@ md_pages ()
     # Run doxygen to generate HTML output
     ${binDoxygen} ${varTmpDir}/doxygen.config
 
+    # Publish the generated pages to web-server directory
     publish_pages
 
-    # Remove temporary directory
-#    rm -rf ${varTmpDir}
+    # Wrapping up
+    rm -f ${varTmpDir}/*.md
+    rm -f ${varTmpDir}/*.txt
+    date > ${varTmpDir}/last_run.log
 }
 
 #_______________________________________________________________________________
