@@ -458,6 +458,7 @@ md_pages ()
     echo ""                             >> ${varTmpDir}/index.md
     echo " - [Quicklook reports](http://idaf.tropomi.eu/omdb/serve_analysis_results/quicklook) (KNMI)" >> ${varTmpDir}/index.md
     echo " - [OCAL logbook](http://idaf.tropomi.eu/logbook/logbook) (KNMI)" >> ${varTmpDir}/index.md
+    echo " - [CKD analysis reports from single processing](http://idaf.tropomi.eu/omdb/serve_analysis_results/ckd_analysis/automated_analysis/)" >> ${varTmpDir}/index.md
 
     echo "Generating pages ..."
 
