@@ -1,0 +1,105 @@
+#!/bin/bash
+
+## =============================================================================
+##
+## Variables
+##
+## =============================================================================
+
+RSYNC="/usr/bin/rsync -axuP --min-size=0.5K"
+
+varSourceDirectories="/data/storage02/trop_lx/quicklook/results/trop/msm /data/local/users/larsb/results/trop/msm"
+
+varResultsDir=/data/local/users/larsb/results
+varTargetDir=${varResultsDir}/quicklooks
+varRemoteDir=larsb@ssh.sron.nl:/deos/larsb/tropomi/results
+
+varMeasurements="pre_env post_env occ"
+varQuicklooks="quicklook_detector4.pdf quicklook_eps.detector4.pdf quicklook_raw.detector4.pdf quicklook_scan_row.detector4.pdf"
+varQuicklooks="${varQuicklooks} quicklook_raw_detector.detector4.pdf quicklook_eps_detector.detector4.pdf"
+
+## =============================================================================
+##
+##  Functions
+##
+## =============================================================================
+
+for varSourceDir in ${varSourceDirectories}
+{
+    for varMeasurement in ${varMeasurements}
+    {
+        nofFiles=0
+        nofNewFiles=0
+        nofExistingFiles=0
+        nofUpdatedFiles=0
+
+        # --- Check if target directory exists -----------------------
+
+        if [[ -d ${varTargetDir}/${varMeasurement} ]]
+        then
+            echo "Target directory ${varMeasurement} available."
+        else
+            echo "Target directory ${varMeasurement} missing - creating it now!"
+            mkdir -p ${varTargetDir}/${varMeasurement}
+        fi
+
+        varPath="${varSourceDir}/${varMeasurement}/"
+
+    for varQuicklook in ${varQuicklooks}
+    {
+        FILES=`find ${varPath} -name ${varQuicklook}`
+
+        for FILE in ${FILES}
+        {
+            ((nofFiles++))
+            varFilename=`echo $FILE | sed "s#${varPath}##" | tr "/" "."`
+            varOutfile="${varTargetDir}/${varMeasurement}/${varFilename}"
+            varBasename=$(basename $varFilename)
+
+            if [[ -f ${varOutfile} ]]
+            then
+                # === book-keeping ============
+                ((nofExistingFiles++))
+                # check if file has been updated
+                if ! diff ${varOutfile} ${FILE} >/dev/null 2>&1
+                then
+                    ((nofUpdatedFiles++))
+                    echo "[UPDATE] ${varBasename}"
+                    cp ${FILE} ${varOutfile}
+                fi
+            else
+                ((nofNewFiles++))
+                echo "[NEW] ${varBasename}"
+                cp ${FILE} ${varOutfile}
+            fi
+        }
+    }
+
+        # Print file statistcs
+        echo ""
+        echo "File statistics (`date +%H:%M`):"
+        echo " - Measurement set : ${varMeasurement}"
+        echo " - Total nof files : ${nofFiles}"
+        echo " - Existing files  : ${nofExistingFiles}"
+        echo " - Updated files   : ${nofUpdatedFiles}"
+        echo " - New files ..... : ${nofNewFiles}"
+        echo ""
+    }
+}
+
+rsync_quicklooks ()
+{
+    echo ""
+    echo " -> transfering data to SRON ..."
+
+    cd ${varResultsDir}
+    /usr/bin/rsync -axuP --min-size=0.5K quicklooks ${varRemoteDir}
+}
+
+## =============================================================================
+##
+##  Main 
+##
+## =============================================================================
+
+#rsync_quicklooks
