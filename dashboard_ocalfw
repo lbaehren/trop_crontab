@@ -1,0 +1,85 @@
+#!/bin/bash
+
+dir_home=/home/larsb
+dir_ocalfw=/data/storage01/users/larsb/sw/ocalfw
+dir_build=${dir_ocalfw}/build
+dir_results=/data/storage01/users/larsb/results
+dir_nightly=/data/storage01/users/larsb/nightly_ckd
+bin_cmake=${dir_home}/sw/bin/cmake
+
+## === Set up environment ======================================================
+
+. ${dir_home}/.bash_profile
+
+rm -rf ${dir_build}
+rm -rf ${dir_results}
+
+# Create directories
+mkdir -p ${dir_build}
+mkdir -p ${dir_results}
+
+# === Functions ================================================================
+
+#_____________________________________________________________________
+#                                                   experimental_build
+
+experimental_build ()
+{
+    # Create build directory
+    mkdir -p ${dir_build}
+
+    # Initial run of CMake to configure project
+    cd ${dir_build}
+    ${bin_cmake} ..
+
+    make ExperimentalStart
+
+    make ExperimentalUpdate
+    make ExperimentalSubmit
+
+    make ExperimentalConfigure
+    make ExperimentalSubmit
+
+    make ExperimentalBuild
+    make ExperimentalSubmit
+
+    make ExperimentalTest
+    make ExperimentalSubmit
+}
+
+#_____________________________________________________________________                             #                                                      collect_results
+
+collect_results ()
+{
+    RSYNC=/usr/bin/rsync -axuP --min-size=0.5K --delete --exclude=trl1brb*g.lx.nc --exclude=engDat.nc --exclude=gseDat.nc
+
+    mkdir -p ${dir_nightly}
+
+    for varDir in dark dpqf offset saturation l01b_processing
+    {
+	${RSYNC} ${dir_results}/trop/ckd/swir/${varDir} ${dir_nightly}
+    }
+}
+
+# === Experimental build =============================================
+
+echo " - dir_home    = ${dir_home}"
+echo " - dir_ocalfw  = ${dir_ocalfw}"
+echo " - dir_build   = ${dir_build}"
+echo " - dir_results = ${dir_results}"
+
+# Configure 
+
+cd ${dir_ocalfw}
+
+tar -xvzf ../cmake.tgz
+cp ../config.yaml ocal/cfg
+
+## Experimental build to be submitted to dashboard
+
+experimental_build
+
+# === Clean up temporary files =======================================
+
+rm -rf ${dir_build}
+rm -rf ${dir_results}
