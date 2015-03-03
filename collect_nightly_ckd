@@ -1,0 +1,21 @@
+
+varTimestamp=`date +%Y_%m_%dT%H_%M`
+varResultsDir=/data/local/users/larsb/results
+varSourceDir=${varResultsDir}/trop/ckd/swir
+varTargetDir=${varResultsDir}/nightly_ckd/${varTimestamp}
+
+# Create directory into which to collect the results
+mkdir -p ${varTargetDir}
+
+# Copy the files to the new location
+
+for FILE in `find ${varSourceDir} -name "*.pdf"`
+{
+    filename=`echo $FILE | sed s#"./"#""# | sed s#"/"#"."#g`
+    cp $FILE ${varTargetDir}/$filename
+}
+
+# Compress the contents of the directory and remove it afterwards
+cd ${varTargetDir}/.. && tar -cvzf ${varTimestamp}.tgz ${varTimestamp}
+
+rm -rf ${varTargetDir}
