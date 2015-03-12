@@ -4,14 +4,23 @@ varResultsDir=/data/local/users/larsb/results
 varSourceDir=${varResultsDir}/trop/ckd/swir
 varTargetDir=${varResultsDir}/nightly_ckd/${varTimestamp}
 
-# Create directory into which to collect the results
+# === Check for over-ride of source directory ===
+
+if [ -z $1 ] ; then
+    echo "Collecting report files from ${varSourceDir}"
+else
+    echo "New value for source directory = $1"
+fi
+
+# === Create directory into which to collect the results =============
+
 mkdir -p ${varTargetDir}
 
 # Copy the files to the new location
 
 for FILE in `find ${varSourceDir} -name "*.pdf"`
 {
-    filename=`echo $FILE | sed s#"./"#""# | sed s#"/"#"."#g`
+    filename=`echo $FILE | sed s#"${varSourceDir}"#""# | sed s#"/"#"."#g | sed s/"\."//`
     cp $FILE ${varTargetDir}/$filename
 }
 
