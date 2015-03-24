@@ -1,8 +1,9 @@
 
 varTimestamp=`date +%Y_%m_%dT%H_%M`
-varResultsDir=/data/local/users/larsb/results
-varSourceDir=${varResultsDir}/trop/ckd/swir
-varTargetDir=${varResultsDir}/nightly_ckd/${varTimestamp}
+directoryResults=`python -c "import ocal; ocal.init(); print ocal.get_global_config()[\"directory.results\"]"`
+directoryTasks=`python -c "import ocal; ocal.init(); print ocal.get_global_config()[\"directory.tasks\"]"`
+varSourceDir=${directoryResults}/trop/ckd/swir
+varTargetDir=${directoryResults}/nightly_ckd/${varTimestamp}
 
 # === Check for over-ride of source directory ===
 
@@ -12,12 +13,29 @@ else
     echo "New value for source directory = $1"
 fi
 
+echo ""
+echo "[collect_nightly_ckd]"
+echo " - directory.tasks    = ${directoryTasks}"
+echo " - directory.results  = ${directoryResults}"
+echo " - directory.ckd_swir = ${varSourceDir}"
+echo " - directory.snapshot = ${varTargetDir}"
+echo ""
+
 # === Create directory into which to collect the results =============
 
 mkdir -p ${varTargetDir}
 
-# Copy the files to the new location
+# Collect result files
 
+for FILE in `find ${varSourceDir} -name "*.pdf"`
+{
+    filename=`echo $FILE | sed s#"${varSourceDir}"#""# | sed s#"/"#"."#g | sed s/"\."//`
+    cp $FILE ${varTargetDir}/$filename
+}
+
+# Collect task configuration files and dependencies
+
+varSourceDir=${directoryTasks}/trop/ckd/swir
 for FILE in `find ${varSourceDir} -name "*.pdf"`
 {
     filename=`echo $FILE | sed s#"${varSourceDir}"#""# | sed s#"/"#"."#g | sed s/"\."//`
